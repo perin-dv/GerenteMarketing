@@ -78,6 +78,7 @@ enum GoalStatus {
 }
 
 enum IntegrationProvider {
+  MANUAL
   META_INSTAGRAM
   META_ADS
   WHATSAPP
@@ -194,11 +195,11 @@ model User {
 }
 
 model Company {
-  id                  String               @id @default(uuid())
+  id                  String                  @id @default(uuid())
   name                String
-  slug                String               @unique
-  status              CompanyStatus        @default(ACTIVE)
-  timezone            String               @default("America/Sao_Paulo")
+  slug                String                  @unique
+  status              CompanyStatus           @default(ACTIVE)
+  timezone            String                  @default("America/Sao_Paulo")
   memberships         Membership[]
   campaigns           Campaign[]
   goals               Goal[]
@@ -212,8 +213,8 @@ model Company {
   autopilotPolicy     AutopilotPolicy?
   leads               Lead[]
   conversations       Conversation[]
-  createdAt           DateTime             @default(now())
-  updatedAt           DateTime             @updatedAt
+  createdAt           DateTime                @default(now())
+  updatedAt           DateTime                @updatedAt
 }
 
 model Membership {
@@ -281,24 +282,24 @@ model Goal {
 }
 
 model IntegrationAccount {
-  id                    String              @id @default(uuid())
-  companyId             String
-  provider              IntegrationProvider
-  status                IntegrationStatus   @default(PENDING)
-  externalAccountId     String?
-  displayName           String?
-  username              String?
-  accessTokenCiphertext String?
+  id                     String              @id @default(uuid())
+  companyId              String
+  provider               IntegrationProvider
+  status                 IntegrationStatus   @default(PENDING)
+  externalAccountId      String?
+  displayName            String?
+  username               String?
+  accessTokenCiphertext  String?
   refreshTokenCiphertext String?
-  scopes                String[]            @default([])
-  tokenExpiresAt        DateTime?
-  metadata              Json?
-  lastSyncedAt          DateTime?
-  errorMessage          String?
-  company               Company             @relation(fields: [companyId], references: [id], onDelete: Cascade)
-  syncRuns              IntegrationSyncRun[]
-  createdAt             DateTime            @default(now())
-  updatedAt             DateTime            @updatedAt
+  scopes                 String[]            @default([])
+  tokenExpiresAt         DateTime?
+  metadata               Json?
+  lastSyncedAt           DateTime?
+  errorMessage           String?
+  company                Company             @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  syncRuns               IntegrationSyncRun[]
+  createdAt              DateTime            @default(now())
+  updatedAt              DateTime            @updatedAt
 
   @@unique([companyId, provider, externalAccountId])
   @@index([companyId, provider])
@@ -377,40 +378,40 @@ model ContentItem {
 }
 
 model Recommendation {
-  id           String               @id @default(uuid())
-  companyId    String
-  type         RecommendationType
-  status       RecommendationStatus @default(OPEN)
-  title        String
-  rationale    String
-  actionText   String
-  confidence   Decimal              @default(0) @db.Decimal(5, 4)
-  impactScore  Int                  @default(0)
-  evidence     Json?
-  generatedAt  DateTime             @default(now())
-  appliedAt    DateTime?
-  company      Company              @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  id          String               @id @default(uuid())
+  companyId   String
+  type        RecommendationType
+  status      RecommendationStatus @default(OPEN)
+  title       String
+  rationale   String
+  actionText  String
+  confidence  Decimal              @default(0) @db.Decimal(5, 4)
+  impactScore Int                  @default(0)
+  evidence    Json?
+  generatedAt DateTime             @default(now())
+  appliedAt   DateTime?
+  company     Company              @relation(fields: [companyId], references: [id], onDelete: Cascade)
 
   @@index([companyId, status, generatedAt])
   @@index([companyId, type])
 }
 
 model Experiment {
-  id          String           @id @default(uuid())
-  companyId   String
-  campaignId  String?
-  name        String
-  hypothesis  String
-  metric      MetricKey
-  status      ExperimentStatus @default(DRAFT)
-  startedAt   DateTime?
-  endedAt     DateTime?
-  winnerKey   String?
-  company     Company          @relation(fields: [companyId], references: [id], onDelete: Cascade)
-  campaign    Campaign?        @relation(fields: [campaignId], references: [id], onDelete: SetNull)
-  variants    ExperimentVariant[]
-  createdAt   DateTime         @default(now())
-  updatedAt   DateTime         @updatedAt
+  id         String           @id @default(uuid())
+  companyId  String
+  campaignId String?
+  name       String
+  hypothesis String
+  metric     MetricKey
+  status     ExperimentStatus @default(DRAFT)
+  startedAt  DateTime?
+  endedAt    DateTime?
+  winnerKey  String?
+  company    Company          @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  campaign   Campaign?        @relation(fields: [campaignId], references: [id], onDelete: SetNull)
+  variants   ExperimentVariant[]
+  createdAt  DateTime         @default(now())
+  updatedAt  DateTime         @updatedAt
 
   @@index([companyId, status])
   @@index([campaignId])
@@ -448,21 +449,21 @@ model AutopilotPolicy {
 }
 
 model Lead {
-  id          String     @id @default(uuid())
-  companyId   String
-  name        String?
-  phone       String?
-  email       String?
-  source      LeadSource
-  stage       LeadStage  @default(NEW)
-  externalId  String?
-  campaignTag String?
-  notes       String?
-  metadata    Json?
-  company     Company    @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  id            String         @id @default(uuid())
+  companyId     String
+  name          String?
+  phone         String?
+  email         String?
+  source        LeadSource
+  stage         LeadStage      @default(NEW)
+  externalId    String?
+  campaignTag   String?
+  notes         String?
+  metadata      Json?
+  company       Company        @relation(fields: [companyId], references: [id], onDelete: Cascade)
   conversations Conversation[]
-  createdAt   DateTime   @default(now())
-  updatedAt   DateTime   @updatedAt
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
 
   @@index([companyId, stage])
   @@index([companyId, source])
@@ -470,17 +471,17 @@ model Lead {
 }
 
 model Conversation {
-  id          String     @id @default(uuid())
-  companyId   String
-  leadId      String?
-  source      LeadSource
-  externalId  String?
-  startedAt   DateTime   @default(now())
-  lastMessageAt DateTime @default(now())
-  messageCount Int       @default(0)
-  metadata    Json?
-  company     Company    @relation(fields: [companyId], references: [id], onDelete: Cascade)
-  lead        Lead?      @relation(fields: [leadId], references: [id], onDelete: SetNull)
+  id            String     @id @default(uuid())
+  companyId     String
+  leadId        String?
+  source        LeadSource
+  externalId    String?
+  startedAt     DateTime   @default(now())
+  lastMessageAt DateTime   @default(now())
+  messageCount  Int        @default(0)
+  metadata      Json?
+  company       Company    @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  lead          Lead?      @relation(fields: [leadId], references: [id], onDelete: SetNull)
 
   @@index([companyId, lastMessageAt])
   @@index([leadId])
