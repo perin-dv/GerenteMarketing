@@ -70,7 +70,8 @@ export function CampaignManager({ initialCampaigns }: { initialCampaigns: Campai
     event.preventDefault();
     setBusy(true);
     setError("");
-    const form = new FormData(event.currentTarget);
+    const formElement = event.currentTarget;
+    const form = new FormData(formElement);
     const mode = String(form.get("mode") || "ORGANIC");
     const payload = {
       name: String(form.get("name") || ""),
@@ -97,7 +98,7 @@ export function CampaignManager({ initialCampaigns }: { initialCampaigns: Campai
       if (!response.ok) throw new Error("Não foi possível criar a campanha.");
       const created = await response.json();
       setCampaigns((current) => [{ ...created, _count: { goals: 0 } }, ...current]);
-      event.currentTarget.reset();
+      formElement.reset();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Erro ao criar campanha.");
     } finally {
