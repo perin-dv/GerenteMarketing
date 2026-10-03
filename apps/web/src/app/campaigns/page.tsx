@@ -23,11 +23,11 @@ export default async function CampaignsPage() {
   if (!me) redirect("/login");
 
   return (
-    <AppFrame me={me} active="Campanhas" eyebrow="PLANEJAMENTO" title="Campanhas">
+    <AppFrame me={me} active="Campanhas" eyebrow="CRESCIMENTO ORGÂNICO" title="Campanhas">
       <div className="page-intro">
         <div>
-          <h2>Estruture antes de anunciar</h2>
-          <p>Crie campanhas internas, orçamento e objetivo. Nenhuma ação é enviada para a Meta nesta fase.</p>
+          <h2>Faça marketing mesmo com R$ 0</h2>
+          <p>Planeje conteúdo, frequência, canal e objetivo. O modo orgânico é o padrão; mídia paga fica opcional para quando você quiser.</p>
         </div>
       </div>
       <CampaignManager initialCampaigns={campaigns} />
