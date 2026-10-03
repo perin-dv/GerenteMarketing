@@ -1,0 +1,20 @@
+{
+  "name": "gerentemarketing",
+  "private": true,
+  "version": "0.1.0",
+  "packageManager": "pnpm@12.8.1",
+  "engines": {
+    "node": ">=22.18.0"
+  },
+  "scripts": {
+    "dev": "pnpm --parallel --filter @gerentemarketing/web --filter @gerentemarketing/api dev",
+    "dev:worker": "pnpm --filter @gerentemarketing/worker dev",
+    "infra:up": "docker compose up -d postgres redis",
+    "infra:down": "docker compose down",
+    "build": "pnpm -r build",
+    "typecheck": "pnpm -r typecheck",
+    "db:generate": "pnpm --filter @gerentemarketing/api prisma:generate",
+    "db:migrate": "pnpm --filter @gerentemarketing/api prisma:migrate",
+    "db:seed": "pnpm --filter @gerentemarketing/api prisma:seed"
+  }
+}
