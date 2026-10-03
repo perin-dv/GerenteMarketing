@@ -77,7 +77,9 @@ export class WorkspaceService {
   async assertOwner(userId: string, companyId: string) {
     const membership = await this.prisma.membership.findUnique({ where: { userId_companyId: { userId, companyId } } });
     if (!membership) throw new NotFoundException("Workspace não encontrado.");
-    if (![UserRole.OWNER, UserRole.ADMIN].includes(membership.role)) throw new ForbiddenException("Apenas owner/admin pode administrar este workspace.");
+    if (membership.role !== UserRole.OWNER && membership.role !== UserRole.ADMIN) {
+      throw new ForbiddenException("Apenas owner/admin pode administrar este workspace.");
+    }
     return membership;
   }
 }
