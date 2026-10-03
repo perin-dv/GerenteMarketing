@@ -1,105 +1,112 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-import { LogoutButton } from "./logout-button";
+import { AppFrame, type AppUser } from "../_components/app-frame";
 
 const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
 
-type Me = {
+type Goal = {
   id: string;
-  email: string;
   name: string;
-  companies: Array<{ id: string; name: string; slug: string; role: string }>;
+  metric: string;
+  targetValue: number;
+  currentValue: number;
+  status: string;
+  projection: { progressPercent: number; paceStatus: string };
 };
 
-async function getMe(): Promise<Me | null> {
+const metricLabel: Record<string, string> = {
+  FOLLOWERS: "Seguidores",
+  REACH: "Alcance",
+  VIEWS: "Visualizações",
+  ENGAGEMENTS: "Interações",
+  CONTENT_PUBLISHED: "Conteúdos publicados",
+  REELS_PUBLISHED: "Reels publicados",
+  POSTS_PUBLISHED: "Posts publicados",
+  STORIES_PUBLISHED: "Stories publicados",
+  WHATSAPP_CONVERSATIONS: "Conversas no WhatsApp",
+  LEADS: "Leads",
+  SALES: "Vendas",
+  REVENUE: "Receita",
+  ROAS: "ROAS",
+  CPA: "CPA",
+};
+
+async function getData(): Promise<{ me: AppUser | null; goals: Goal[] }> {
   const cookieStore = await cookies();
   const cookieHeader = cookieStore.toString();
 
   try {
-    const response = await fetch(`${apiUrl}/auth/me`, {
-      headers: { cookie: cookieHeader },
-      cache: "no-store",
-    });
-    if (!response.ok) return null;
-    return response.json();
+    const [meResponse, goalsResponse] = await Promise.all([
+      fetch(`${apiUrl}/auth/me`, { headers: { cookie: cookieHeader }, cache: "no-store" }),
+      fetch(`${apiUrl}/goals`, { headers: { cookie: cookieHeader }, cache: "no-store" }),
+    ]);
+    if (!meResponse.ok) return { me: null, goals: [] };
+    return {
+      me: await meResponse.json(),
+      goals: goalsResponse.ok ? await goalsResponse.json() : [],
+    };
   } catch {
-    return null;
+    return { me: null, goals: [] };
   }
 }
 
 export default async function DashboardPage() {
-  const me = await getMe();
+  const { me, goals } = await getData();
   if (!me) redirect("/login");
-
   const company = me.companies[0];
-  const navigation = ["Dashboard", "Campanhas", "Metas", "Criativos", "Conteúdo", "Leads", "Radar IA", "Autopilot"];
+  const activeGoals = goals.filter((goal) => goal.status === "ACTIVE").slice(0, 3);
 
   return (
-    <main className="app-shell">
-      <aside className="sidebar">
-        <div className="sidebar-brand"><span>GM</span><strong>GerenteMarketing</strong></div>
-        <nav>
-          {navigation.map((item, index) => (
-            <div className={index === 0 ? "nav-item active" : "nav-item"} key={item}>
-              <span className="nav-index">{String(index + 1).padStart(2, "0")}</span>{item}
-            </div>
-          ))}
-        </nav>
-        <div className="sidebar-footer">
-          <span className="tiny-label">WORKSPACE</span>
-          <strong>{company?.name || "Sem empresa"}</strong>
-          <span>{company?.role || "—"}</span>
+    <AppFrame me={me} active="Dashboard" eyebrow="CENTRO DE COMANDO" title="Dashboard">
+      <section className="welcome-card">
+        <div>
+          <span className="eyebrow">MODO ORGÂNICO</span>
+          <h2>{company?.name || "Configure sua empresa"}</h2>
+          <p>O GerenteMarketing está preparado para começar com R$ 0: planeje conteúdo, acompanhe metas e transforme alcance em conversas no WhatsApp. Tráfego pago é opcional.</p>
         </div>
-      </aside>
-
-      <section className="dashboard-content">
-        <header className="topbar">
-          <div>
-            <span className="eyebrow">CENTRO DE COMANDO</span>
-            <h1>Dashboard</h1>
-          </div>
-          <div className="topbar-actions">
-            <span className="live-pill"><i className="signal-dot" /> BASE ONLINE</span>
-            <div className="user-chip"><strong>{me.name}</strong><span>{me.email}</span></div>
-            <LogoutButton />
-          </div>
-        </header>
-
-        <section className="welcome-card">
-          <div>
-            <span className="eyebrow">PRIMEIRO WORKSPACE</span>
-            <h2>{company?.name || "Configure sua empresa"}</h2>
-            <p>A fundação está ativa. O próximo passo é conectar dados reais da Meta para preencher métricas e recomendações.</p>
-          </div>
-          <div className="growth-score empty-score"><strong>—</strong><span>Growth Score</span><small>Aguardando dados</small></div>
-        </section>
-
-        <section className="metric-grid">
-          {[
-            ["Gasto", "R$ 0,00"],
-            ["Receita atribuída", "R$ 0,00"],
-            ["Leads", "0"],
-            ["Vendas", "0"],
-            ["ROAS", "—"],
-            ["CPA", "—"],
-          ].map(([label, value]) => (
-            <article className="metric-card" key={label}>
-              <span>{label}</span><strong>{value}</strong><small>Sem fonte conectada</small>
-            </article>
-          ))}
-        </section>
-
-        <section className="dashboard-grid">
-          <article className="panel large-panel">
-            <div className="panel-title"><div><span className="eyebrow">METAS</span><h3>Progresso</h3></div><span className="status-muted">Nenhuma meta</span></div>
-            <div className="empty-state"><div className="empty-orbit" /><strong>Pronto para sua primeira meta</strong><p>Quando criarmos campanhas e metas, o progresso real aparecerá aqui.</p></div>
-          </article>
-          <article className="panel">
-            <div className="panel-title"><div><span className="eyebrow">RADAR IA</span><h3>Oportunidades</h3></div></div>
-            <div className="empty-state compact"><strong>Aguardando sinais</strong><p>Nenhum score é inventado. O Radar IA só será ativado quando houver dados suficientes.</p></div>
-          </article>
-        </section>
+        <div className="growth-score empty-score"><strong>R$0</strong><span>Modo inicial</span><small>Orgânico primeiro</small></div>
       </section>
-    </main>
+
+      <section className="metric-grid">
+        {[
+          ["Seguidores", "—"],
+          ["Alcance", "—"],
+          ["Visualizações", "—"],
+          ["Conversas WhatsApp", "—"],
+          ["Leads", "—"],
+          ["Vendas", "—"],
+        ].map(([label, value]) => (
+          <article className="metric-card" key={label}>
+            <span>{label}</span><strong>{value}</strong><small>Aguardando integração ou atualização real</small>
+          </article>
+        ))}
+      </section>
+
+      <section className="dashboard-grid">
+        <article className="panel large-panel">
+          <div className="panel-title">
+            <div><span className="eyebrow">METAS ORGÂNICAS</span><h3>Progresso</h3></div>
+            <span className="status-muted">{activeGoals.length ? `${activeGoals.length} ativa(s)` : "Nenhuma meta"}</span>
+          </div>
+          {activeGoals.length ? (
+            <div className="goal-preview-list">
+              {activeGoals.map((goal) => (
+                <div className="goal-preview" key={goal.id}>
+                  <div className="goal-preview-head"><strong>{goal.name}</strong><span>{goal.projection.progressPercent}%</span></div>
+                  <div className="progress-track"><i style={{ width: `${Math.min(100, goal.projection.progressPercent)}%` }} /></div>
+                  <small>{goal.currentValue} de {goal.targetValue} · {metricLabel[goal.metric] || goal.metric}</small>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="empty-state"><div className="empty-orbit" /><strong>Pronto para crescer sem anúncio</strong><p>Crie uma campanha orgânica e metas de conteúdo, alcance, seguidores ou conversas no WhatsApp.</p></div>
+          )}
+        </article>
+        <article className="panel">
+          <div className="panel-title"><div><span className="eyebrow">RADAR IA</span><h3>Oportunidades</h3></div></div>
+          <div className="empty-state compact"><strong>Próxima etapa</strong><p>O Radar IA vai analisar resultados reais para sugerir temas, formatos e próximos conteúdos — sem fabricar likes, views ou seguidores.</p></div>
+        </article>
+      </section>
+    </AppFrame>
   );
 }

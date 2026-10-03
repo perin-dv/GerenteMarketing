@@ -1,0 +1,49 @@
+a { color: inherit; text-decoration: none; }
+.nav-item.disabled { opacity: .42; cursor: not-allowed; }
+.page-intro { margin-bottom: 16px; display: flex; justify-content: space-between; gap: 20px; align-items: end; }
+.page-intro h2 { margin: 0 0 6px; font-size: 22px; letter-spacing: -.03em; }
+.page-intro p { margin: 0; color: var(--muted); line-height: 1.6; max-width: 760px; }
+.summary-strip { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 10px; margin-bottom: 12px; }
+.summary-strip > div { border: 1px solid var(--border); background: rgba(14,19,26,.7); border-radius: 14px; padding: 16px; display: grid; gap: 6px; }
+.summary-strip span { color: var(--muted); font-size: 10px; text-transform: uppercase; letter-spacing: .07em; font-weight: 750; }
+.summary-strip strong { font-size: 20px; letter-spacing: -.03em; }
+.workspace-grid { display: grid; grid-template-columns: minmax(300px,.8fr) minmax(0,1.6fr); gap: 12px; align-items: start; }
+.form-panel { min-height: 0; }
+.list-panel { min-height: 520px; }
+.entity-form { display: grid; gap: 14px; margin-top: 20px; }
+.entity-form label { display: grid; gap: 7px; color: #c6ced9; font-size: 12px; font-weight: 700; }
+.entity-form input, .entity-form select { width: 100%; border: 1px solid var(--border); background: #0b0f15; color: var(--text); padding: 12px 13px; border-radius: 10px; outline: none; }
+.entity-form input:focus, .entity-form select:focus { border-color: rgba(141,252,187,.42); box-shadow: 0 0 0 3px rgba(141,252,187,.06); }
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.entity-list { display: grid; gap: 10px; margin-top: 20px; }
+.entity-row, .goal-row { border: 1px solid var(--border); background: rgba(8,12,18,.56); border-radius: 13px; padding: 15px; }
+.entity-row { display: flex; justify-content: space-between; gap: 18px; align-items: center; }
+.entity-main { min-width: 0; }
+.entity-title { display: flex; align-items: center; gap: 9px; flex-wrap: wrap; }
+.entity-main small, .goal-row small { display: block; color: var(--muted); margin-top: 5px; line-height: 1.5; }
+.status-badge, .pace-badge { border: 1px solid var(--border); border-radius: 999px; padding: 5px 8px; font-size: 9px; font-weight: 850; letter-spacing: .04em; text-transform: uppercase; white-space: nowrap; }
+.status-badge.active, .pace-badge.on_track, .pace-badge.ahead { color: var(--accent); border-color: rgba(141,252,187,.18); background: rgba(141,252,187,.06); }
+.status-badge.paused, .status-badge.draft, .pace-badge.no_data { color: #b7c0cb; }
+.pace-badge.at_risk { color: #ffd08c; border-color: rgba(255,208,140,.2); background: rgba(255,208,140,.06); }
+.row-actions { display: flex; gap: 7px; flex-wrap: wrap; align-items: center; }
+.danger-button { border: 1px solid rgba(255,123,134,.18); background: rgba(255,123,134,.05); color: #ffb7bd; border-radius: 9px; padding: 9px 11px; font-size: 11px; font-weight: 750; }
+.goal-row { display: grid; gap: 13px; }
+.goal-row-head { display: flex; justify-content: space-between; gap: 14px; align-items: start; }
+.progress-track { height: 8px; border-radius: 999px; background: rgba(255,255,255,.055); overflow: hidden; border: 1px solid rgba(255,255,255,.04); }
+.progress-track i { display: block; height: 100%; background: linear-gradient(90deg, var(--accent-2), var(--accent)); border-radius: inherit; }
+.goal-numbers { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 8px; }
+.goal-numbers span { color: var(--muted); font-size: 10px; display: grid; gap: 3px; }
+.goal-numbers b { color: var(--text); font-size: 13px; }
+.goal-preview-list { display: grid; gap: 14px; padding-top: 24px; }
+.goal-preview { display: grid; gap: 8px; }
+.goal-preview-head { display: flex; justify-content: space-between; gap: 12px; }
+.goal-preview small { color: var(--muted); }
+
+@media (max-width: 1050px) {
+  .workspace-grid { grid-template-columns: 1fr; }
+}
+@media (max-width: 720px) {
+  .summary-strip { grid-template-columns: 1fr; }
+  .form-row, .goal-numbers { grid-template-columns: 1fr 1fr; }
+  .entity-row { align-items: flex-start; flex-direction: column; }
+}
