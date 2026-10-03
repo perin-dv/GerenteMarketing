@@ -2,10 +2,11 @@ import { NextRequest, NextResponse } from "next/server";
 
 export function proxy(request: NextRequest) {
   const hasSession = Boolean(request.cookies.get("gm_access")?.value);
-  const isDashboard = request.nextUrl.pathname.startsWith("/dashboard");
-  const isLogin = request.nextUrl.pathname === "/login";
+  const pathname = request.nextUrl.pathname;
+  const isProtected = ["/dashboard", "/campaigns", "/goals"].some((route) => pathname.startsWith(route));
+  const isLogin = pathname === "/login";
 
-  if (isDashboard && !hasSession) {
+  if (isProtected && !hasSession) {
     return NextResponse.redirect(new URL("/login", request.url));
   }
 
@@ -17,5 +18,5 @@ export function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/login", "/dashboard/:path*"],
+  matcher: ["/login", "/dashboard/:path*", "/campaigns/:path*", "/goals/:path*"],
 };
