@@ -27,15 +27,42 @@ enum CampaignStatus {
   ARCHIVED
 }
 
+enum CampaignMode {
+  ORGANIC
+  PAID
+  HYBRID
+}
+
+enum CampaignChannel {
+  INSTAGRAM
+  WHATSAPP
+  FACEBOOK
+  TIKTOK
+  TELEGRAM
+  MULTICHANNEL
+}
+
 enum CampaignObjective {
   AWARENESS
   TRAFFIC
   ENGAGEMENT
   LEADS
   SALES
+  CONTENT
+  COMMUNITY
+  WHATSAPP
 }
 
 enum GoalMetric {
+  FOLLOWERS
+  REACH
+  VIEWS
+  ENGAGEMENTS
+  CONTENT_PUBLISHED
+  REELS_PUBLISHED
+  POSTS_PUBLISHED
+  STORIES_PUBLISHED
+  WHATSAPP_CONVERSATIONS
   LEADS
   SALES
   REVENUE
@@ -91,23 +118,29 @@ model Membership {
 }
 
 model Campaign {
-  id           String            @id @default(uuid())
-  companyId    String
-  name         String
-  objective    CampaignObjective
-  status       CampaignStatus    @default(DRAFT)
-  budgetTotal  Decimal           @db.Decimal(14, 2)
-  dailyBudget  Decimal?          @db.Decimal(14, 2)
-  startDate    DateTime?
-  endDate      DateTime?
-  notes        String?
-  company      Company           @relation(fields: [companyId], references: [id], onDelete: Cascade)
-  goals        Goal[]
-  createdAt    DateTime          @default(now())
-  updatedAt    DateTime          @updatedAt
+  id             String            @id @default(uuid())
+  companyId      String
+  name           String
+  mode           CampaignMode      @default(ORGANIC)
+  channel        CampaignChannel   @default(INSTAGRAM)
+  objective      CampaignObjective
+  status         CampaignStatus    @default(DRAFT)
+  budgetTotal    Decimal           @default(0) @db.Decimal(14, 2)
+  dailyBudget    Decimal?          @db.Decimal(14, 2)
+  plannedReels   Int               @default(0)
+  plannedPosts   Int               @default(0)
+  plannedStories Int               @default(0)
+  startDate      DateTime?
+  endDate        DateTime?
+  notes          String?
+  company        Company           @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  goals          Goal[]
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
 
   @@index([companyId])
   @@index([companyId, status])
+  @@index([companyId, mode])
   @@index([createdAt])
 }
 
