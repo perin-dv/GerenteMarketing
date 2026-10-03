@@ -19,6 +19,37 @@ enum CompanyStatus {
   INACTIVE
 }
 
+enum CampaignStatus {
+  DRAFT
+  ACTIVE
+  PAUSED
+  COMPLETED
+  ARCHIVED
+}
+
+enum CampaignObjective {
+  AWARENESS
+  TRAFFIC
+  ENGAGEMENT
+  LEADS
+  SALES
+}
+
+enum GoalMetric {
+  LEADS
+  SALES
+  REVENUE
+  ROAS
+  CPA
+}
+
+enum GoalStatus {
+  ACTIVE
+  PAUSED
+  COMPLETED
+  CANCELED
+}
+
 model User {
   id           String       @id @default(uuid())
   email        String       @unique
@@ -38,6 +69,8 @@ model Company {
   status      CompanyStatus @default(ACTIVE)
   timezone    String        @default("America/Sao_Paulo")
   memberships Membership[]
+  campaigns   Campaign[]
+  goals       Goal[]
   auditLogs   AuditLog[]
   createdAt   DateTime      @default(now())
   updatedAt   DateTime      @updatedAt
@@ -55,6 +88,48 @@ model Membership {
 
   @@unique([userId, companyId])
   @@index([companyId])
+}
+
+model Campaign {
+  id           String            @id @default(uuid())
+  companyId    String
+  name         String
+  objective    CampaignObjective
+  status       CampaignStatus    @default(DRAFT)
+  budgetTotal  Decimal           @db.Decimal(14, 2)
+  dailyBudget  Decimal?          @db.Decimal(14, 2)
+  startDate    DateTime?
+  endDate      DateTime?
+  notes        String?
+  company      Company           @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  goals        Goal[]
+  createdAt    DateTime          @default(now())
+  updatedAt    DateTime          @updatedAt
+
+  @@index([companyId])
+  @@index([companyId, status])
+  @@index([createdAt])
+}
+
+model Goal {
+  id           String      @id @default(uuid())
+  companyId    String
+  campaignId   String?
+  name         String
+  metric       GoalMetric
+  targetValue  Decimal     @db.Decimal(14, 2)
+  currentValue Decimal     @default(0) @db.Decimal(14, 2)
+  targetDate   DateTime
+  status       GoalStatus  @default(ACTIVE)
+  company      Company     @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  campaign     Campaign?   @relation(fields: [campaignId], references: [id], onDelete: SetNull)
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+
+  @@index([companyId])
+  @@index([companyId, status])
+  @@index([campaignId])
+  @@index([targetDate])
 }
 
 model AuditLog {
