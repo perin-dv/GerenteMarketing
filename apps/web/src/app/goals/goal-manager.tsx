@@ -18,6 +18,15 @@ type Goal = {
 };
 
 const metricLabel: Record<string, string> = {
+  FOLLOWERS: "Seguidores",
+  REACH: "Alcance",
+  VIEWS: "Visualizações",
+  ENGAGEMENTS: "Interações",
+  CONTENT_PUBLISHED: "Conteúdos publicados",
+  REELS_PUBLISHED: "Reels publicados",
+  POSTS_PUBLISHED: "Posts publicados",
+  STORIES_PUBLISHED: "Stories publicados",
+  WHATSAPP_CONVERSATIONS: "Conversas no WhatsApp",
   LEADS: "Leads",
   SALES: "Vendas",
   REVENUE: "Receita",
@@ -51,7 +60,7 @@ export function GoalManager({ initialGoals, campaigns }: { initialGoals: Goal[];
     const campaignId = String(form.get("campaignId") || "");
     const payload = {
       name: String(form.get("name") || ""),
-      metric: String(form.get("metric") || "LEADS"),
+      metric: String(form.get("metric") || "WHATSAPP_CONVERSATIONS"),
       targetValue: Number(form.get("targetValue") || 0),
       currentValue: Number(form.get("currentValue") || 0),
       targetDate: new Date(String(form.get("targetDate"))).toISOString(),
@@ -114,25 +123,29 @@ export function GoalManager({ initialGoals, campaigns }: { initialGoals: Goal[];
         <div><span>Em risco</span><strong>{summary.atRisk}</strong></div>
       </section>
 
+      <section className="organic-banner compact-banner">
+        <div><span className="eyebrow">CRESCIMENTO REAL</span><h3>Metas orgânicas sem investimento obrigatório</h3><p>Meça seguidores, alcance, views, conteúdo publicado e conversas no WhatsApp. Atualize os valores manualmente agora; depois integraremos as métricas oficiais.</p></div>
+      </section>
+
       <section className="workspace-grid">
         <article className="panel form-panel">
           <div className="panel-title"><div><span className="eyebrow">NOVA META</span><h3>Objetivo mensurável</h3></div></div>
           <form className="entity-form" onSubmit={createGoal}>
-            <label>Nome<input name="name" minLength={3} required placeholder="Ex.: 40 leads em outubro" /></label>
-            <label>Métrica<select name="metric" defaultValue="LEADS"><option value="LEADS">Leads</option><option value="SALES">Vendas</option><option value="REVENUE">Receita</option><option value="ROAS">ROAS</option><option value="CPA">CPA</option></select></label>
+            <label>Nome<input name="name" minLength={3} required placeholder="Ex.: 100 conversas no WhatsApp em outubro" /></label>
+            <label>Métrica<select name="metric" defaultValue="WHATSAPP_CONVERSATIONS"><optgroup label="Orgânico"><option value="WHATSAPP_CONVERSATIONS">Conversas no WhatsApp</option><option value="FOLLOWERS">Seguidores</option><option value="REACH">Alcance</option><option value="VIEWS">Visualizações</option><option value="ENGAGEMENTS">Interações</option><option value="CONTENT_PUBLISHED">Conteúdos publicados</option><option value="REELS_PUBLISHED">Reels publicados</option><option value="POSTS_PUBLISHED">Posts publicados</option><option value="STORIES_PUBLISHED">Stories publicados</option></optgroup><optgroup label="Negócio"><option value="LEADS">Leads</option><option value="SALES">Vendas</option><option value="REVENUE">Receita</option></optgroup><optgroup label="Mídia paga opcional"><option value="ROAS">ROAS</option><option value="CPA">CPA</option></optgroup></select></label>
             <div className="form-row">
-              <label>Alvo<input name="targetValue" type="number" min="0.01" step="0.01" required placeholder="40" /></label>
+              <label>Alvo<input name="targetValue" type="number" min="0.01" step="0.01" required placeholder="100" /></label>
               <label>Atual<input name="currentValue" type="number" min="0" step="0.01" defaultValue="0" /></label>
             </div>
             <label>Prazo<input name="targetDate" type="date" required /></label>
             <label>Campanha<select name="campaignId" defaultValue=""><option value="">Sem campanha vinculada</option>{campaigns.map((campaign) => <option value={campaign.id} key={campaign.id}>{campaign.name}</option>)}</select></label>
             {error ? <div className="form-error">{error}</div> : null}
-            <button className="primary-button" disabled={busy}>{busy ? "Criando..." : "Criar meta"}</button>
+            <button className="primary-button" disabled={busy}>{busy ? "Criando..." : "Criar meta orgânica"}</button>
           </form>
         </article>
 
         <article className="panel list-panel">
-          <div className="panel-title"><div><span className="eyebrow">METAS</span><h3>Progresso e projeção</h3></div><span className="status-muted">Projeção interna inicial</span></div>
+          <div className="panel-title"><div><span className="eyebrow">METAS</span><h3>Progresso e projeção</h3></div><span className="status-muted">Sem dados inventados</span></div>
           {goals.length ? (
             <div className="entity-list">
               {goals.map((goal) => (
@@ -156,7 +169,7 @@ export function GoalManager({ initialGoals, campaigns }: { initialGoals: Goal[];
                 </div>
               ))}
             </div>
-          ) : <div className="empty-state"><strong>Nenhuma meta</strong><p>Crie uma meta para começar a medir progresso e ritmo interno.</p></div>}
+          ) : <div className="empty-state"><strong>Nenhuma meta orgânica</strong><p>Comece com uma meta de conteúdo, alcance ou conversas no WhatsApp — sem precisar investir em anúncio.</p></div>}
         </article>
       </section>
     </>
