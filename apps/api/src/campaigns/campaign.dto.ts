@@ -1,25 +1,52 @@
 import { Type } from "class-transformer";
-import { IsEnum, IsISO8601, IsNumber, IsOptional, IsString, Min, MinLength } from "class-validator";
-import { CampaignObjective, CampaignStatus } from "@prisma/client";
+import { IsEnum, IsISO8601, IsInt, IsNumber, IsOptional, IsString, Min, MinLength } from "class-validator";
+import { CampaignChannel, CampaignMode, CampaignObjective, CampaignStatus } from "@prisma/client";
 
 export class CreateCampaignDto {
   @IsString()
   @MinLength(3)
   name!: string;
 
+  @IsOptional()
+  @IsEnum(CampaignMode)
+  mode?: CampaignMode;
+
+  @IsOptional()
+  @IsEnum(CampaignChannel)
+  channel?: CampaignChannel;
+
   @IsEnum(CampaignObjective)
   objective!: CampaignObjective;
 
+  @IsOptional()
   @Type(() => Number)
   @IsNumber()
   @Min(0)
-  budgetTotal!: number;
+  budgetTotal?: number;
 
   @IsOptional()
   @Type(() => Number)
   @IsNumber()
   @Min(0)
   dailyBudget?: number;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(0)
+  plannedReels?: number;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(0)
+  plannedPosts?: number;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(0)
+  plannedStories?: number;
 
   @IsOptional()
   @IsISO8601()
@@ -41,6 +68,14 @@ export class UpdateCampaignDto {
   name?: string;
 
   @IsOptional()
+  @IsEnum(CampaignMode)
+  mode?: CampaignMode;
+
+  @IsOptional()
+  @IsEnum(CampaignChannel)
+  channel?: CampaignChannel;
+
+  @IsOptional()
   @IsEnum(CampaignObjective)
   objective?: CampaignObjective;
 
@@ -59,6 +94,24 @@ export class UpdateCampaignDto {
   @IsNumber()
   @Min(0)
   dailyBudget?: number;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(0)
+  plannedReels?: number;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(0)
+  plannedPosts?: number;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(0)
+  plannedStories?: number;
 
   @IsOptional()
   @IsISO8601()
