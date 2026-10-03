@@ -56,7 +56,8 @@ export function GoalManager({ initialGoals, campaigns }: { initialGoals: Goal[];
     event.preventDefault();
     setBusy(true);
     setError("");
-    const form = new FormData(event.currentTarget);
+    const formElement = event.currentTarget;
+    const form = new FormData(formElement);
     const campaignId = String(form.get("campaignId") || "");
     const payload = {
       name: String(form.get("name") || ""),
@@ -77,7 +78,7 @@ export function GoalManager({ initialGoals, campaigns }: { initialGoals: Goal[];
       if (!response.ok) throw new Error("Não foi possível criar a meta.");
       const created = await response.json();
       setGoals((current) => [created, ...current]);
-      event.currentTarget.reset();
+      formElement.reset();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Erro ao criar meta.");
     } finally {
