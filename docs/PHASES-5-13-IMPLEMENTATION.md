@@ -6,53 +6,50 @@ O produto prioriza crescimento orgânico com investimento de mídia opcional. O 
 
 ## Fase 5 — Meta / Instagram
 
-Implementado nesta branch:
+Implementado:
 
 - conexão autorizada via OAuth;
 - Graph API versionada por `META_GRAPH_VERSION`;
-- armazenamento de tokens criptografados com AES-256-GCM;
+- tokens criptografados com AES-256-GCM;
 - descoberta de Página + conta profissional do Instagram;
 - sincronização inicial de perfil, mídia e insights disponíveis;
 - registro de sync runs, erros e timestamps;
 - nenhuma métrica inventada.
 
-A versão padrão configurada é `v26.0`. O valor continua configurável para permitir atualização sem alterar domínio.
+A versão padrão configurada é `v26.0` e permanece configurável.
 
 ## Fase 6 — Métricas reais
 
 Implementado:
 
 - `MetricSnapshot` com origem e timestamp;
-- resumo de período;
-- histórico por métrica;
-- followers, content published e engagements na sincronização básica;
-- reach/views coletados quando o tipo de mídia disponibiliza esses insights;
-- metas compatíveis recebem o valor real mais recente.
+- resumo de período e histórico por métrica;
+- followers, conteúdo publicado e engagements;
+- reach/views quando disponíveis;
+- metas compatíveis recebem o valor real mais recente;
+- dashboard passa a usar os snapshots reais.
 
 ## Fase 7 — Recomendações + conteúdo
 
 Implementado:
 
-- Content Engine que transforma o plano de campanha em fila de Reels/posts/stories;
+- Content Engine para fila de Reels/posts/stories;
 - Radar/Decision Engine determinístico;
 - recomendação com evidência, confiança e impacto;
-- integração ausente, meta fora do ritmo e conteúdo abaixo do plano viram sinais explícitos;
-- aplicar/dispensar recomendação fica auditável.
+- detecção de integração ausente, meta fora do ritmo e conteúdo abaixo do plano;
+- aplicar/dispensar recomendação auditável.
 
 ## Fase 8 — Experimentos
 
 Implementado:
 
-- criação de teste A/B;
-- hipótese;
-- métrica principal;
-- variantes;
-- tamanho de amostra;
-- valor observado;
+- teste A/B;
+- hipótese e métrica principal;
+- variantes, amostra e valor observado;
 - início/conclusão;
-- seleção de vencedor pelo melhor valor entre variantes com amostra.
+- seleção de vencedor entre variantes que tenham amostra.
 
-Antes de automação estatística mais forte, o sistema evita afirmar significância sem tamanho de amostra e metodologia adequados.
+O sistema não afirma significância estatística sem metodologia e amostra adequadas.
 
 ## Fase 9 — Autopilot
 
@@ -63,59 +60,60 @@ Implementado:
 - kill switch;
 - limite de ações/dia;
 - permissões de publicação e respostas separadas;
-- orçamento bloqueado (`allowBudgetChanges=false`) nesta etapa;
-- execução atual gera e prioriza recomendações, sem gasto externo.
+- orçamento bloqueado (`allowBudgetChanges=false`);
+- execução atual prioriza recomendações sem gasto externo.
 
 ## Fase 10 — Leads + WhatsApp
 
 Implementado:
 
-- conexão com WhatsApp Cloud API;
+- WhatsApp Cloud API;
 - token criptografado;
 - webhook GET de verificação;
-- validação HMAC `X-Hub-Signature-256` no POST;
-- criação automática de lead por remetente;
+- validação HMAC `X-Hub-Signature-256`;
+- lead automático por remetente;
 - conversa com janela operacional de 24h;
 - contagem de novas conversas como métrica;
-- CRM com estágios NEW / CONTACTED / QUALIFIED / WON / LOST.
+- CRM NEW / CONTACTED / QUALIFIED / WON / LOST.
 
 ## Fase 11 — TikTok
 
-Base preparada:
+Implementado tecnicamente:
 
-- provider reservado no schema;
-- variáveis `TIKTOK_CLIENT_KEY` e `TIKTOK_CLIENT_SECRET`;
-- readiness no backend.
+- OAuth 2.0 via Login Kit;
+- `user.info.basic`, `user.info.stats` e `video.list`;
+- access/refresh token criptografados;
+- Display API v2;
+- sincronização de seguidores, quantidade de vídeos, views e interações dos vídeos recentes;
+- tela `/channels`.
 
-A conexão real só será habilitada depois de configurar um aplicativo TikTok aprovado e confirmar os escopos disponíveis para a conta do cliente.
+A conexão real depende de aplicativo TikTok aprovado e redirect URI HTTPS registrado.
 
 ## Fase 12 — Telegram
 
-Base preparada:
+Implementado tecnicamente:
 
-- provider reservado no schema;
-- variável `TELEGRAM_BOT_TOKEN`;
-- readiness no backend.
-
-O adapter de Bot API será ligado em branch própria depois da validação das fases Meta/WhatsApp.
+- Bot API oficial;
+- validação por `getMe`;
+- token criptografado;
+- registro `setWebhook` quando existe URL pública HTTPS;
+- `secret_token` validado no header oficial;
+- mensagens reais criam/atualizam lead e conversa no CRM;
+- novos leads geram snapshot real de LEADS.
 
 ## Fase 13 — SaaS / multiempresa
 
-A fundação já existe desde a Fase 3:
+Implementado neste estágio:
 
-- Company;
-- Membership;
-- roles;
-- isolamento por `companyId` no backend;
-- entidades novas também carregam `companyId`.
+- Company + Membership + roles;
+- isolamento por `companyId`;
+- criação de novo workspace;
+- listagem dos workspaces do usuário;
+- troca de empresa com validação de membership;
+- nova sessão JWT ligada ao workspace escolhido;
+- tela `/workspaces`.
 
-Próximo bloco desta fase:
-
-- troca de workspace na sessão;
-- convites;
-- planos/billing;
-- limites por plano;
-- agency mode.
+Próximos submódulos comerciais da Fase 13 ficam separados do core técnico: convites por e-mail, planos/billing, limites por plano e agency mode.
 
 ## Regras permanentes
 
@@ -123,6 +121,6 @@ Próximo bloco desta fase:
 2. Nunca prometer número garantido de crescimento orgânico.
 3. Tokens nunca voltam ao frontend depois de armazenados.
 4. Toda automação externa deve ser auditável e ter kill switch.
-5. Meta/Instagram/WhatsApp usam APIs oficiais.
+5. Meta/Instagram, WhatsApp, TikTok e Telegram usam APIs oficiais.
 6. Tráfego pago é opcional; orçamento zero continua suportado.
 7. O primeiro cliente de validação continua sendo o Tem Na Loja.
