@@ -25,11 +25,11 @@ export default async function GoalsPage() {
   if (!me) redirect("/login");
 
   return (
-    <AppFrame me={me} active="Metas" eyebrow="INTELIGÊNCIA DE OBJETIVOS" title="Metas">
+    <AppFrame me={me} active="Metas" eyebrow="CRESCIMENTO MENSURÁVEL" title="Metas">
       <div className="page-intro">
         <div>
-          <h2>Meta sem chute</h2>
-          <p>Defina alvo, prazo e valor atual. O sistema calcula progresso e uma projeção inicial baseada no ritmo observado.</p>
+          <h2>Meta real, sem precisar comprar alcance</h2>
+          <p>Defina o que quer conquistar organicamente — conteúdo, seguidores, alcance, visualizações ou conversas no WhatsApp — e acompanhe o ritmo até o prazo.</p>
         </div>
       </div>
       <GoalManager initialGoals={goals} campaigns={campaigns} />
