@@ -1,0 +1,29 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-gerentemarketing}
+      POSTGRES_USER: ${POSTGRES_USER:-gerentemarketing}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-gerentemarketing_dev}
+    ports:
+      - "5432:5432"
+    volumes:
+      - gm_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-gerentemarketing} -d ${POSTGRES_DB:-gerentemarketing}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - gm_redis_data:/data
+
+volumes:
+  gm_postgres_data:
+  gm_redis_data:

@@ -1,0 +1,25 @@
+{
+  "name": "gerentemarketing",
+  "private": true,
+  "version": "0.1.0",
+  "engines": {
+    "node": ">=22.18.0"
+  },
+  "workspaces": [
+    "apps/*"
+  ],
+  "scripts": {
+    "dev": "concurrently -n web,api \"npm run dev --workspace @gerentemarketing/web\" \"npm run dev --workspace @gerentemarketing/api\"",
+    "dev:worker": "npm run dev --workspace @gerentemarketing/worker",
+    "infra:up": "docker compose up -d postgres redis",
+    "infra:down": "docker compose down",
+    "build": "npm run build --workspaces --if-present",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "db:generate": "npm run prisma:generate --workspace @gerentemarketing/api",
+    "db:migrate": "npm run prisma:migrate --workspace @gerentemarketing/api",
+    "db:seed": "npm run prisma:seed --workspace @gerentemarketing/api"
+  },
+  "devDependencies": {
+    "concurrently": "9.2.1"
+  }
+}
