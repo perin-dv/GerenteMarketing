@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 import { AppFrame } from "../_components/app-frame";
 import { getProtectedJson } from "../_lib/server-data";
 
-const areas = [
+const areas: Array<[string, string, string]> = [
   ["Integrações", "/integrations", "Meta/Instagram e WhatsApp oficial"],
   ["Conteúdo", "/content", "Fila de Reels, posts e stories"],
   ["Radar IA", "/radar", "Recomendações com evidência"],
