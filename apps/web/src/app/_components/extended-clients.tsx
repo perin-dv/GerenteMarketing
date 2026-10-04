@@ -74,10 +74,13 @@ export function WorkspaceManager({ initial }: { initial: any[] }) {
   async function refresh() { setItems(await api("/workspace/companies")); }
 
   async function create(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault(); const form = new FormData(event.currentTarget); setMessage("");
+    event.preventDefault();
+    const formElement = event.currentTarget;
+    const form = new FormData(formElement);
+    setMessage("");
     try {
       await api("/workspace/companies", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name: form.get("name") }) });
-      await refresh(); event.currentTarget.reset(); setMessage("Workspace criado. Agora você pode alternar entre empresas.");
+      await refresh(); formElement.reset(); setMessage("Workspace criado. Agora você pode alternar entre empresas.");
     } catch (error) { setMessage(error instanceof Error ? error.message : "Falha ao criar workspace."); }
   }
 
