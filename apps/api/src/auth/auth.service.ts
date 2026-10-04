@@ -54,7 +54,7 @@ export class AuthService {
     };
   }
 
-  async me(userId: string) {
+  async me(userId: string, activeCompanyId?: string | null) {
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
       include: {
@@ -69,16 +69,27 @@ export class AuthService {
       throw new UnauthorizedException();
     }
 
+    const companies = user.memberships.map((membership) => ({
+      id: membership.company.id,
+      name: membership.company.name,
+      slug: membership.company.slug,
+      role: membership.role,
+    }));
+
+    if (activeCompanyId) {
+      companies.sort((a, b) => {
+        const aActive = a.id === activeCompanyId ? 1 : 0;
+        const bActive = b.id === activeCompanyId ? 1 : 0;
+        return bActive - aActive;
+      });
+    }
+
     return {
       id: user.id,
       email: user.email,
       name: user.name,
-      companies: user.memberships.map((membership) => ({
-        id: membership.company.id,
-        name: membership.company.name,
-        slug: membership.company.slug,
-        role: membership.role,
-      })),
+      activeCompanyId: activeCompanyId ?? companies[0]?.id ?? null,
+      companies,
     };
   }
 }
