@@ -1,12 +1,14 @@
 import {
-  Body,
   Controller,
   ForbiddenException,
   Headers,
   Post,
+  RawBodyRequest,
+  Req,
   ServiceUnavailableException,
 } from "@nestjs/common";
-import { createHash, timingSafeEqual } from "node:crypto";
+import type { Request } from "express";
+import { createHmac, timingSafeEqual } from "node:crypto";
 import { GrowthService } from "./growth.service";
 
 @Controller("webhooks/whatsapp/relay")
@@ -15,24 +17,24 @@ export class WhatsappRelayController {
 
   @Post()
   receive(
-    @Body() payload: unknown,
-    @Headers("x-gerentemarketing-relay-secret") providedSecret?: string,
+    @Req() request: RawBodyRequest<Request>,
+    @Headers("x-gerentemarketing-relay-signature") providedSignature?: string,
   ) {
-    const expectedSecret = process.env.GERENTEMARKETING_RELAY_SECRET || "";
-    if (!expectedSecret) {
-      throw new ServiceUnavailableException(
-        "GERENTEMARKETING_RELAY_SECRET não configurado.",
-      );
+    const appSecret = process.env.META_APP_SECRET || "";
+    if (!appSecret) {
+      throw new ServiceUnavailableException("META_APP_SECRET não configurado.");
     }
-    if (!providedSecret || !sameSecret(providedSecret, expectedSecret)) {
-      throw new ForbiddenException("Relay do WhatsApp não autorizado.");
+    if (!request.rawBody || !providedSignature?.startsWith("sha256=")) {
+      throw new ForbiddenException("Assinatura do relay ausente.");
     }
-    return this.growth.receiveWhatsappWebhook(payload);
-  }
-}
 
-function sameSecret(provided: string, expected: string) {
-  const providedHash = createHash("sha256").update(provided, "utf8").digest();
-  const expectedHash = createHash("sha256").update(expected, "utf8").digest();
-  return timingSafeEqual(providedHash, expectedHash);
+    const expectedSignature = `sha256=${createHmac("sha256", appSecret).update(request.rawBody).digest("hex")}`;
+    const provided = Buffer.from(providedSignature);
+    const expected = Buffer.from(expectedSignature);
+    if (provided.length !== expected.length || !timingSafeEqual(provided, expected)) {
+      throw new ForbiddenException("Assinatura do relay inválida.");
+    }
+
+    return this.growth.receiveWhatsappWebhook(request.body);
+  }
 }
