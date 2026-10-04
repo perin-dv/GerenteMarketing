@@ -12,6 +12,7 @@ import {
   WhatsappWebhookController,
 } from "./growth.controllers";
 import { GrowthService } from "./growth.service";
+import { MetaBusinessLoginService } from "./meta-business-login.service";
 
 @Module({
   imports: [AuthModule],
@@ -25,7 +26,7 @@ import { GrowthService } from "./growth.service";
     AutopilotController,
     LeadsController,
   ],
-  providers: [GrowthService, PrismaService],
+  providers: [GrowthService, MetaBusinessLoginService, PrismaService],
   exports: [GrowthService],
 })
 export class GrowthModule {}
