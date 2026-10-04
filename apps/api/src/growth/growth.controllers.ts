@@ -31,10 +31,14 @@ import {
   UpdateRecommendationDto,
 } from "./growth.dto";
 import { GrowthService } from "./growth.service";
+import { MetaBusinessLoginService } from "./meta-business-login.service";
 
 @Controller("integrations")
 export class IntegrationsController {
-  constructor(private readonly growth: GrowthService) {}
+  constructor(
+    private readonly growth: GrowthService,
+    private readonly metaLogin: MetaBusinessLoginService,
+  ) {}
 
   @Get()
   @UseGuards(AuthGuard)
@@ -45,13 +49,21 @@ export class IntegrationsController {
   @Get("readiness")
   @UseGuards(AuthGuard)
   readiness() {
-    return this.growth.integrationReadiness();
+    const readiness = this.growth.integrationReadiness();
+    return {
+      ...readiness,
+      meta: {
+        ...readiness.meta,
+        ready: readiness.meta.ready && Boolean(process.env.META_LOGIN_CONFIG_ID),
+        required: [...readiness.meta.required, "META_LOGIN_CONFIG_ID"],
+      },
+    };
   }
 
   @Post("meta/oauth-url")
   @UseGuards(AuthGuard)
   metaOauthUrl(@Req() request: AuthenticatedRequest) {
-    return this.growth.createMetaOauthUrl(request.user?.companyId, request.user!.sub);
+    return this.metaLogin.createOauthUrl(request.user?.companyId, request.user!.sub);
   }
 
   @Get("meta/callback")
