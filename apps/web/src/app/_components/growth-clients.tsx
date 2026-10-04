@@ -26,7 +26,8 @@ export function IntegrationsManager({ initial, readiness }: { initial: any[]; re
 
   async function connectWhatsapp(event: FormEvent<HTMLFormElement>) {
     event.preventDefault(); setBusy(true); setMessage("");
-    const form = new FormData(event.currentTarget);
+    const formElement = event.currentTarget;
+    const form = new FormData(formElement);
     try {
       await api("/integrations/whatsapp/connect", {
         method: "POST",
@@ -39,7 +40,7 @@ export function IntegrationsManager({ initial, readiness }: { initial: any[]; re
         }),
       });
       const updated = await api("/integrations");
-      setItems(updated); setMessage("WhatsApp conectado com sucesso."); event.currentTarget.reset();
+      setItems(updated); setMessage("WhatsApp conectado com sucesso."); formElement.reset();
     } catch (error) { setMessage(error instanceof Error ? error.message : "Falha ao conectar WhatsApp."); }
     finally { setBusy(false); }
   }
@@ -125,7 +126,17 @@ export function RadarManager({ initial }: { initial: any[] }) {
 
 export function ExperimentsManager({ initial, campaigns }: { initial: any[]; campaigns: any[] }) {
   const [items, setItems] = useState(initial || []); const [message, setMessage] = useState("");
-  async function create(event: FormEvent<HTMLFormElement>) { event.preventDefault(); const form = new FormData(event.currentTarget); try { await api("/experiments", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name: form.get("name"), hypothesis: form.get("hypothesis"), metric: form.get("metric"), campaignId: form.get("campaignId") || undefined, variants: [String(form.get("variantA") || "A"), String(form.get("variantB") || "B")] }) }); setItems(await api("/experiments")); event.currentTarget.reset(); } catch (error) { setMessage(error instanceof Error ? error.message : "Falha."); } }
+  async function create(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const formElement = event.currentTarget;
+    const form = new FormData(formElement);
+    setMessage("");
+    try {
+      await api("/experiments", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name: form.get("name"), hypothesis: form.get("hypothesis"), metric: form.get("metric"), campaignId: form.get("campaignId") || undefined, variants: [String(form.get("variantA") || "A"), String(form.get("variantB") || "B")] }) });
+      setItems(await api("/experiments"));
+      formElement.reset();
+    } catch (error) { setMessage(error instanceof Error ? error.message : "Falha."); }
+  }
   async function setExperiment(id: string, status: string) { await api(`/experiments/${id}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ status }) }); setItems(await api("/experiments")); }
   async function updateVariant(expId: string, variant: any) { const sample = window.prompt(`Tamanho da amostra para ${variant.label}:`, String(variant.sampleSize)); if (sample === null) return; const value = window.prompt(`Valor da métrica para ${variant.label}:`, String(variant.metricValue)); if (value === null) return; await api(`/experiments/${expId}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ variantId: variant.id, sampleSize: Number(sample), metricValue: Number(value) }) }); setItems(await api("/experiments")); }
   return <section className="workspace-grid"><article className="panel form-panel"><span className="eyebrow">NOVO TESTE A/B</span><h3>Teste antes de concluir</h3><form className="entity-form" onSubmit={create}><label>Nome<input name="name" required minLength={3} /></label><label>Hipótese<textarea name="hypothesis" required minLength={5} /></label><label>Métrica<select name="metric" defaultValue="WHATSAPP_CONVERSATIONS"><option value="WHATSAPP_CONVERSATIONS">Conversas no WhatsApp</option><option value="VIEWS">Visualizações</option><option value="REACH">Alcance</option><option value="ENGAGEMENTS">Interações</option></select></label><label>Campanha<select name="campaignId" defaultValue=""><option value="">Sem vínculo</option>{campaigns.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}</select></label><div className="form-row"><label>Variante A<input name="variantA" required placeholder="CTA: chama no WhatsApp" /></label><label>Variante B<input name="variantB" required placeholder="CTA: peça seu orçamento" /></label></div><button className="primary-button">Criar experimento</button></form>{message ? <div className="form-error">{message}</div> : null}</article><article className="panel"><div className="entity-list">{items.map((item) => <div className="goal-row" key={item.id}><div className="goal-row-head"><div><strong>{item.name}</strong><small>{item.metric} · {item.hypothesis}</small></div><span className="status-badge">{item.status}</span></div><div className="variant-grid">{item.variants.map((v: any) => <button className={`variant-card ${item.winnerKey === v.key ? "winner" : ""}`} key={v.id} onClick={() => updateVariant(item.id, v)}><strong>{v.key} · {v.label}</strong><span>Amostra {v.sampleSize} · valor {v.metricValue}</span></button>)}</div><div className="row-actions"><button className="ghost-button" onClick={() => setExperiment(item.id, "RUNNING")}>Iniciar</button><button className="primary-button" onClick={() => setExperiment(item.id, "COMPLETED")}>Concluir e escolher vencedor</button></div></div>)}</div></article></section>;
@@ -141,7 +152,17 @@ export function AutopilotManager({ initial }: { initial: any }) {
 export function LeadsManager({ initial, summary }: { initial: any[]; summary: any }) {
   const [items, setItems] = useState(initial || []); const [stats, setStats] = useState(summary || {}); const [message, setMessage] = useState("");
   async function refresh() { setItems(await api("/leads")); setStats(await api("/leads/summary")); }
-  async function create(event: FormEvent<HTMLFormElement>) { event.preventDefault(); const form = new FormData(event.currentTarget); try { await api("/leads", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name: form.get("name") || undefined, phone: form.get("phone") || undefined, source: form.get("source"), notes: form.get("notes") || undefined }) }); await refresh(); event.currentTarget.reset(); } catch (error) { setMessage(error instanceof Error ? error.message : "Falha."); } }
+  async function create(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const formElement = event.currentTarget;
+    const form = new FormData(formElement);
+    setMessage("");
+    try {
+      await api("/leads", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name: form.get("name") || undefined, phone: form.get("phone") || undefined, source: form.get("source"), notes: form.get("notes") || undefined }) });
+      await refresh();
+      formElement.reset();
+    } catch (error) { setMessage(error instanceof Error ? error.message : "Falha."); }
+  }
   async function stage(id: string, next: string) { await api(`/leads/${id}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ stage: next }) }); await refresh(); }
   return <><section className="summary-strip"><div><span>Leads</span><strong>{stats.total || 0}</strong></div><div><span>Qualificados</span><strong>{stats.byStage?.QUALIFIED || 0}</strong></div><div><span>Ganhos</span><strong>{stats.byStage?.WON || 0}</strong></div></section><section className="workspace-grid"><article className="panel form-panel"><span className="eyebrow">CRM</span><h3>Novo contato manual</h3><form className="entity-form" onSubmit={create}><label>Nome<input name="name" /></label><label>Telefone<input name="phone" /></label><label>Origem<select name="source" defaultValue="ORGANIC"><option value="WHATSAPP">WhatsApp</option><option value="INSTAGRAM">Instagram</option><option value="ORGANIC">Orgânico</option><option value="FACEBOOK">Facebook</option><option value="TIKTOK">TikTok</option><option value="TELEGRAM">Telegram</option><option value="OTHER">Outro</option></select></label><label>Notas<textarea name="notes" /></label><button className="primary-button">Adicionar lead</button></form>{message ? <div className="form-error">{message}</div> : null}</article><article className="panel"><div className="entity-list">{items.length ? items.map((lead) => <div className="entity-row" key={lead.id}><div className="entity-main"><div className="entity-title"><strong>{lead.name || lead.phone || "Contato"}</strong><span className="status-badge">{lead.stage}</span></div><small>{lead.source} · {lead.phone || "sem telefone"} · {lead._count?.conversations || 0} conversa(s)</small></div><div className="row-actions"><button className="ghost-button" onClick={() => stage(lead.id, "CONTACTED")}>Contatado</button><button className="ghost-button" onClick={() => stage(lead.id, "QUALIFIED")}>Qualificar</button><button className="primary-button" onClick={() => stage(lead.id, "WON")}>Ganho</button></div></div>) : <div className="empty-state"><strong>Nenhum lead</strong><p>Quando o webhook do WhatsApp estiver conectado, novos contatos poderão entrar automaticamente.</p></div>}</div></article></section></>;
 }
