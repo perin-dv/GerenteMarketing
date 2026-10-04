@@ -13,12 +13,14 @@ import {
 } from "./growth.controllers";
 import { GrowthService } from "./growth.service";
 import { MetaBusinessLoginService } from "./meta-business-login.service";
+import { WhatsappRelayController } from "./whatsapp-relay.controller";
 
 @Module({
   imports: [AuthModule],
   controllers: [
     IntegrationsController,
     WhatsappWebhookController,
+    WhatsappRelayController,
     MetricsController,
     ContentController,
     RecommendationsController,
