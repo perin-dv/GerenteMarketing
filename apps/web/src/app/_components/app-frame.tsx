@@ -13,11 +13,15 @@ const navigation = [
   { label: "Dashboard", href: "/dashboard" },
   { label: "Campanhas", href: "/campaigns" },
   { label: "Metas", href: "/goals" },
-  { label: "Criativos", href: "#" },
-  { label: "Conteúdo", href: "#" },
-  { label: "Leads", href: "#" },
-  { label: "Radar IA", href: "#" },
-  { label: "Autopilot", href: "#" },
+  { label: "Conteúdo", href: "/content" },
+  { label: "Leads", href: "/leads" },
+  { label: "Radar IA", href: "/radar" },
+  { label: "Experimentos", href: "/experiments" },
+  { label: "Autopilot", href: "/autopilot" },
+  { label: "Integrações", href: "/integrations" },
+  { label: "Canais", href: "/channels" },
+  { label: "Workspaces", href: "/workspaces" },
+  { label: "Growth OS", href: "/growth" },
 ];
 
 export function AppFrame({
@@ -41,16 +45,11 @@ export function AppFrame({
         <div className="sidebar-brand"><span>GM</span><strong>GerenteMarketing</strong></div>
         <nav>
           {navigation.map((item, index) => {
-            const enabled = item.href !== "#";
-            const className = item.label === active ? "nav-item active" : enabled ? "nav-item" : "nav-item disabled";
-            return enabled ? (
+            const className = item.label === active ? "nav-item active" : "nav-item";
+            return (
               <Link className={className} href={item.href} key={item.label}>
                 <span className="nav-index">{String(index + 1).padStart(2, "0")}</span>{item.label}
               </Link>
-            ) : (
-              <div className={className} key={item.label}>
-                <span className="nav-index">{String(index + 1).padStart(2, "0")}</span>{item.label}
-              </div>
             );
           })}
         </nav>
