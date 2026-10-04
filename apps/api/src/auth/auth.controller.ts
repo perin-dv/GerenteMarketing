@@ -25,7 +25,7 @@ export class AuthController {
   @UseGuards(AuthGuard)
   @Get("me")
   me(@Req() request: AuthenticatedRequest) {
-    return this.auth.me(request.user!.sub);
+    return this.auth.me(request.user!.sub, request.user!.companyId);
   }
 
   @Post("logout")

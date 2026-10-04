@@ -10,6 +10,8 @@ const areas: Array<[string, string, string]> = [
   ["Experimentos", "/experiments", "Testes A/B e vencedores"],
   ["Autopilot", "/autopilot", "Políticas, limites e kill switch"],
   ["Leads", "/leads", "CRM e conversas do WhatsApp"],
+  ["TikTok + Telegram", "/channels", "Login Kit, Display API e Bot API"],
+  ["Workspaces", "/workspaces", "Multiempresa e troca de contexto"],
 ];
 
 export default async function GrowthPage() {
@@ -17,7 +19,7 @@ export default async function GrowthPage() {
   if (!me) redirect("/login");
   return (
     <AppFrame me={me} active="" eyebrow="GROWTH OS" title="Central de crescimento">
-      <div className="page-intro"><div><h2>Fases 5–10 em uma central</h2><p>Entre por aqui enquanto as novas áreas são incorporadas à navegação principal.</p></div></div>
+      <div className="page-intro"><div><h2>Fases 5–13 em uma central</h2><p>Dados reais, conteúdo, decisão, testes, automação controlada, canais e operação multiempresa.</p></div></div>
       <section className="metric-grid">
         {areas.map(([title, href, text]) => (
           <Link href={href} key={href} className="metric-card" style={{ textDecoration: "none" }}>
