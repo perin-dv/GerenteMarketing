@@ -137,12 +137,26 @@ export class GrowthService {
         required: ["META_APP_SECRET", "WHATSAPP_VERIFY_TOKEN", "INTEGRATION_ENCRYPTION_KEY"],
       },
       tiktok: {
-        ready: Boolean(process.env.TIKTOK_CLIENT_KEY && process.env.TIKTOK_CLIENT_SECRET),
-        status: "adapter-reserved",
+        ready: Boolean(
+          process.env.TIKTOK_CLIENT_KEY &&
+          process.env.TIKTOK_CLIENT_SECRET &&
+          process.env.TIKTOK_REDIRECT_URI &&
+          process.env.INTEGRATION_ENCRYPTION_KEY
+        ),
+        status: "oauth-metrics-implemented",
+        publishingReady: false,
+        required: ["TIKTOK_CLIENT_KEY", "TIKTOK_CLIENT_SECRET", "TIKTOK_REDIRECT_URI", "INTEGRATION_ENCRYPTION_KEY"],
       },
       telegram: {
-        ready: Boolean(process.env.TELEGRAM_BOT_TOKEN),
-        status: "adapter-reserved",
+        ready: Boolean(process.env.TELEGRAM_BOT_TOKEN && process.env.INTEGRATION_ENCRYPTION_KEY),
+        webhookReady: Boolean(
+          process.env.TELEGRAM_BOT_TOKEN &&
+          process.env.INTEGRATION_ENCRYPTION_KEY &&
+          process.env.TELEGRAM_WEBHOOK_SECRET &&
+          process.env.PUBLIC_API_BASE_URL?.startsWith("https://")
+        ),
+        status: "bot-api-implemented",
+        required: ["TELEGRAM_BOT_TOKEN", "INTEGRATION_ENCRYPTION_KEY"],
       },
     };
   }
