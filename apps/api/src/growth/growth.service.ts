@@ -558,11 +558,14 @@ export class GrowthService {
     return item;
   }
 
-  async listRecommendations(companyIdInput: string | null | undefined) {
+  async listRecommendations(companyIdInput: string | null | undefined, includeHistory = false) {
     const companyId = this.companyIdOrThrow(companyIdInput);
     const items = await this.prisma.recommendation.findMany({
-      where: { companyId },
-      orderBy: [{ status: "asc" }, { impactScore: "desc" }, { generatedAt: "desc" }],
+      where: {
+        companyId,
+        ...(includeHistory ? {} : { status: RecommendationStatus.OPEN }),
+      },
+      orderBy: [{ impactScore: "desc" }, { generatedAt: "desc" }],
     });
     return items.map((item) => ({ ...item, confidence: Number(item.confidence) }));
   }
