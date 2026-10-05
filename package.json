@@ -9,7 +9,8 @@
     "apps/*"
   ],
   "scripts": {
-    "dev": "concurrently -n web,api \"npm run dev --workspace @gerentemarketing/web\" \"npm run dev --workspace @gerentemarketing/api\"",
+    "dev": "cmd /c Abrir-GerenteMarketing.cmd",
+    "dev:combined": "npm run infra:up && concurrently -n web,api \"npm run dev --workspace @gerentemarketing/web\" \"npm run dev --workspace @gerentemarketing/api\"",
     "dev:worker": "npm run dev --workspace @gerentemarketing/worker",
     "infra:up": "docker compose up -d postgres redis",
     "infra:down": "docker compose down",
