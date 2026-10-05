@@ -18,6 +18,14 @@ export class WhatsappMarketingConsentDto {
   optIn!: boolean;
 }
 
+export class WhatsappCampaignTestDto {
+  @IsUUID()
+  leadId!: string;
+
+  @IsBoolean()
+  confirmSend!: boolean;
+}
+
 export class CreateWhatsappCampaignDto {
   @IsString()
   @MinLength(3)
