@@ -79,8 +79,8 @@ export class MetaPublishingService {
   }
 
   private publicationKind(type: ContentType, dto: PublishMetaContentDto) {
-    if ([ContentType.POST, ContentType.IMAGE].includes(type)) return MetaMediaKind.IMAGE;
-    if ([ContentType.REEL, ContentType.VIDEO].includes(type)) return MetaMediaKind.VIDEO;
+    if (type === ContentType.POST || type === ContentType.IMAGE) return MetaMediaKind.IMAGE;
+    if (type === ContentType.REEL || type === ContentType.VIDEO) return MetaMediaKind.VIDEO;
     if (type === ContentType.STORY) {
       if (!dto.mediaKind) throw new BadRequestException("Para Story, informe se a mídia é IMAGE ou VIDEO.");
       return dto.mediaKind;
@@ -111,7 +111,7 @@ export class MetaPublishingService {
     const companyId = this.companyIdOrThrow(companyIdInput);
     const item = await this.prisma.contentItem.findFirst({ where: { id: contentId, companyId } });
     if (!item) throw new NotFoundException("Conteúdo não encontrado.");
-    if (![CampaignChannel.INSTAGRAM, CampaignChannel.MULTICHANNEL].includes(item.channel)) {
+    if (item.channel !== CampaignChannel.INSTAGRAM && item.channel !== CampaignChannel.MULTICHANNEL) {
       throw new BadRequestException("Este conteúdo não está configurado para Instagram.");
     }
 
