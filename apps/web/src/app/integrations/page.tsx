@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import { AppFrame } from "../_components/app-frame";
-import { IntegrationsManager } from "../_components/growth-clients";
 import { getProtectedMany } from "../_lib/server-data";
+import { IntegrationsManager } from "./integrations-manager";
 
 export default async function IntegrationsPage() {
   const { me, data } = await getProtectedMany(["/integrations", "/integrations/readiness"]);
