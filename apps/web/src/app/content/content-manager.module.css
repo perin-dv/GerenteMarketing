@@ -152,7 +152,6 @@
   font-size: 12px;
 }
 
-accountChip,
 .accountChip {
   display: inline-flex;
   align-items: center;
@@ -175,7 +174,6 @@ accountChip,
   margin-bottom: 14px;
 }
 
-publishForm,
 .publishForm {
   display: grid;
   gap: 14px;
