@@ -12,6 +12,7 @@ export type AppUser = {
 const navigation = [
   { label: "Dashboard", href: "/dashboard" },
   { label: "Campanhas", href: "/campaigns" },
+  { label: "WhatsApp Mkt", href: "/whatsapp-campaigns" },
   { label: "Metas", href: "/goals" },
   { label: "Conteúdo", href: "/content" },
   { label: "Performance", href: "/performance" },
