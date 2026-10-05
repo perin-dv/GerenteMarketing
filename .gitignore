@@ -9,6 +9,7 @@ coverage/
 apps/*/.env
 apps/*/.env.*
 !apps/*/.env.example
+apps/*/.data/
 *.log
 .DS_Store
 .vscode/
