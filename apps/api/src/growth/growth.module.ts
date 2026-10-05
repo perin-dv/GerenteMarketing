@@ -13,6 +13,8 @@ import {
 } from "./growth.controllers";
 import { GrowthService } from "./growth.service";
 import { MetaBusinessLoginService } from "./meta-business-login.service";
+import { WhatsappConversationController } from "./whatsapp-conversation.controller";
+import { WhatsappConversationService } from "./whatsapp-conversation.service";
 import { WhatsappRelayController } from "./whatsapp-relay.controller";
 
 @Module({
@@ -21,6 +23,7 @@ import { WhatsappRelayController } from "./whatsapp-relay.controller";
     IntegrationsController,
     WhatsappWebhookController,
     WhatsappRelayController,
+    WhatsappConversationController,
     MetricsController,
     ContentController,
     RecommendationsController,
@@ -28,7 +31,12 @@ import { WhatsappRelayController } from "./whatsapp-relay.controller";
     AutopilotController,
     LeadsController,
   ],
-  providers: [GrowthService, MetaBusinessLoginService, PrismaService],
+  providers: [
+    GrowthService,
+    MetaBusinessLoginService,
+    WhatsappConversationService,
+    PrismaService,
+  ],
   exports: [GrowthService],
 })
 export class GrowthModule {}
