@@ -14,6 +14,7 @@ const navigation = [
   { label: "Campanhas", href: "/campaigns" },
   { label: "Metas", href: "/goals" },
   { label: "Conteúdo", href: "/content" },
+  { label: "Performance", href: "/performance" },
   { label: "Leads", href: "/leads" },
   { label: "Radar IA", href: "/radar" },
   { label: "Experimentos", href: "/experiments" },
