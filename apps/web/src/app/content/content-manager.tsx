@@ -68,34 +68,46 @@ export function ContentManager({
     }
   }
 
+  async function uploadMedia(file: File) {
+    const body = new FormData();
+    body.append("file", file);
+    return api("/media/upload", { method: "POST", body });
+  }
+
   async function publish(event: FormEvent<HTMLFormElement>, item: any) {
     event.preventDefault();
-    const form = new FormData(event.currentTarget);
-    const mediaUrl = String(form.get("mediaUrl") || "").trim();
+    const formElement = event.currentTarget;
+    const form = new FormData(formElement);
     const integrationId = String(form.get("integrationId") || "").trim();
-    const mediaKind = String(form.get("mediaKind") || "").trim();
     const caption = String(form.get("caption") || "").trim();
+    const mediaValue = form.get("mediaFile");
+    const mediaFile = mediaValue instanceof File ? mediaValue : null;
 
-    if (!mediaUrl) return;
+    if (!mediaFile || mediaFile.size === 0) {
+      setMessage("Selecione uma imagem JPG/JPEG ou um vídeo MP4.");
+      return;
+    }
     if (!window.confirm(`Publicar \"${item.title}\" agora no Instagram oficial?`)) return;
 
     setBusyContentId(item.id);
-    setMessage("");
+    setMessage("Enviando mídia para o GerenteMarketing...");
     try {
+      const uploaded = await uploadMedia(mediaFile);
+      setMessage("Mídia enviada. Publicando pela Meta...");
       const result = await api(`/content/${item.id}/publish/meta`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          mediaUrl,
+          mediaUrl: uploaded.publicUrl,
           integrationId: integrationId || undefined,
-          mediaKind: mediaKind || undefined,
+          mediaKind: uploaded.mediaKind,
           caption: caption || undefined,
           shareToFeed: true,
         }),
       });
       await refresh();
       setMessage(`Publicado de verdade no Instagram${result.account ? ` @ ${result.account}` : ""}. ID: ${result.mediaId}`);
-      event.currentTarget.reset();
+      formElement.reset();
     } catch (error) {
       await refresh().catch(() => undefined);
       setMessage(error instanceof Error ? error.message : "Falha na publicação oficial.");
@@ -175,21 +187,15 @@ export function ContentManager({
                               </select>
                             </label>
                             <label>
-                              URL HTTPS pública da mídia
-                              <input name="mediaUrl" type="url" required placeholder={item.type === "REEL" || item.type === "VIDEO" ? "https://.../video.mp4" : "https://.../imagem.jpg"} />
-                              <small>A Meta precisa conseguir baixar essa imagem ou vídeo pela internet.</small>
+                              Arquivo da publicação
+                              <input name="mediaFile" type="file" required accept="image/jpeg,video/mp4,.jpg,.jpeg,.mp4" />
+                              <small>Escolha JPG/JPEG para imagem ou MP4 para Reel, vídeo ou Story. Limite atual: 250 MB.</small>
                             </label>
-                            {item.type === "STORY" ? (
-                              <label>
-                                Tipo da mídia
-                                <select name="mediaKind" defaultValue="IMAGE"><option value="IMAGE">Imagem</option><option value="VIDEO">Vídeo</option></select>
-                              </label>
-                            ) : null}
                             <label>
                               Legenda opcional
                               <textarea name="caption" placeholder={item.caption || item.cta || "Se deixar vazio, usa a legenda/CTA do plano."} />
                             </label>
-                            <button className="primary-button" disabled={isBusy}>{isBusy ? "Publicando na Meta..." : "Publicar agora no Instagram"}</button>
+                            <button className="primary-button" disabled={isBusy}>{isBusy ? "Enviando e publicando..." : "Publicar agora no Instagram"}</button>
                           </form>
                         ) : publishable ? (
                           <small>Conecte a Meta para liberar publicação oficial.</small>
