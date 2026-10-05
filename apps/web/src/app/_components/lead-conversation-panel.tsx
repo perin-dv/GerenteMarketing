@@ -17,6 +17,13 @@ function displayPhone(phone: string | null | undefined) {
   return digits.length > 4 ? `•••• ${digits.slice(-4)}` : digits;
 }
 
+const scrollAreaStyle = {
+  maxHeight: "520px",
+  overflowY: "auto" as const,
+  overscrollBehavior: "contain" as const,
+  paddingRight: "4px",
+};
+
 export function LeadConversationPanel({ leads }: { leads: any[] }) {
   const whatsappLeads = (leads || []).filter((lead) => lead.source === "WHATSAPP");
   const [selectedId, setSelectedId] = useState<string>("");
@@ -55,7 +62,7 @@ export function LeadConversationPanel({ leads }: { leads: any[] }) {
         <div className="empty-state"><strong>Nenhum lead do WhatsApp</strong><p>As conversas aparecerão aqui assim que chegarem pelo relay oficial.</p></div>
       ) : (
         <div className="workspace-grid">
-          <div className="entity-list">
+          <div className="entity-list" style={scrollAreaStyle}>
             {whatsappLeads.map((lead) => (
               <div className="entity-row" key={lead.id}>
                 <div className="entity-main">
@@ -69,7 +76,7 @@ export function LeadConversationPanel({ leads }: { leads: any[] }) {
             ))}
           </div>
 
-          <div className="entity-list">
+          <div className="entity-list" style={scrollAreaStyle}>
             {selected ? <div className="panel-title"><div><strong>{selected.name || "Cliente WhatsApp"}</strong><small>{displayPhone(selected.phone)}</small></div></div> : null}
             {error ? <div className="form-error">{error}</div> : null}
             {selected && !busy && !messages.length && !error ? (
