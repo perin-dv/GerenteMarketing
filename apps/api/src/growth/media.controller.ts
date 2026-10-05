@@ -47,8 +47,9 @@ export class MediaController {
       callback(null, true);
     },
   }))
-  upload(@UploadedFile() file?: Express.Multer.File) {
+  async upload(@UploadedFile() file?: Express.Multer.File) {
     const valid = this.media.validateUploadedFile(file);
+    const fingerprint = await this.media.fingerprintFile(valid.path);
     return {
       ok: true,
       filename: valid.filename,
@@ -57,6 +58,7 @@ export class MediaController {
       bytes: valid.size,
       mediaKind: valid.mimetype === "video/mp4" ? "VIDEO" : "IMAGE",
       publicUrl: this.media.publicUrl(valid.filename),
+      fingerprint,
     };
   }
 
