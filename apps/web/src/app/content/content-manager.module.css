@@ -1,0 +1,256 @@
+.commandBar {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 16px;
+  align-items: end;
+  margin-bottom: 18px;
+}
+
+.commandCopy {
+  display: grid;
+  gap: 5px;
+}
+
+.commandCopy p {
+  margin: 0;
+  color: var(--muted, #8fa1b7);
+  font-size: 13px;
+}
+
+.commandForm {
+  display: flex;
+  gap: 10px;
+  align-items: end;
+  flex-wrap: wrap;
+}
+
+.commandForm label {
+  min-width: 230px;
+}
+
+.workbench {
+  display: grid;
+  grid-template-columns: minmax(280px, 360px) minmax(0, 1fr);
+  gap: 16px;
+  align-items: start;
+}
+
+.queuePanel,
+.detailPanel {
+  min-width: 0;
+}
+
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  margin: 12px 0;
+}
+
+.filterButton {
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  background: rgba(15, 23, 42, 0.28);
+  color: #9fb0c5;
+  padding: 7px 10px;
+  border-radius: 999px;
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.filterButtonActive {
+  color: #08110d;
+  background: #85f0b3;
+  border-color: #85f0b3;
+  font-weight: 800;
+}
+
+.queueList {
+  display: grid;
+  gap: 8px;
+  max-height: 610px;
+  overflow: auto;
+  padding-right: 5px;
+}
+
+.queueItem {
+  width: 100%;
+  border: 1px solid rgba(148, 163, 184, 0.16);
+  background: rgba(10, 17, 27, 0.7);
+  border-radius: 14px;
+  padding: 12px;
+  text-align: left;
+  color: inherit;
+  cursor: pointer;
+  display: grid;
+  gap: 7px;
+  transition: border-color 150ms ease, transform 150ms ease, background 150ms ease;
+}
+
+.queueItem:hover {
+  transform: translateY(-1px);
+  border-color: rgba(133, 240, 179, 0.42);
+}
+
+.queueItemActive {
+  border-color: rgba(133, 240, 179, 0.8);
+  background: rgba(30, 71, 52, 0.22);
+}
+
+.queueTop {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  align-items: center;
+}
+
+.queueTitle {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 800;
+  font-size: 13px;
+}
+
+.queueMeta {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  color: #7f93ab;
+  font-size: 11px;
+}
+
+.statusDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #64748b;
+  flex: 0 0 auto;
+}
+
+.statusDotReady { background: #38bdf8; }
+.statusDotPublished { background: #85f0b3; }
+.statusDotFailed { background: #fb7185; }
+
+.detailHead {
+  display: flex;
+  justify-content: space-between;
+  gap: 18px;
+  align-items: flex-start;
+  padding-bottom: 16px;
+  margin-bottom: 16px;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.14);
+}
+
+.detailHead h3 {
+  margin: 5px 0 6px;
+  font-size: 22px;
+}
+
+.detailMeta {
+  color: #7f93ab;
+  font-size: 12px;
+}
+
+.accountChip {
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid rgba(133, 240, 179, 0.28);
+  background: rgba(133, 240, 179, 0.08);
+  color: #b7f7d1;
+  border-radius: 999px;
+  padding: 7px 10px;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.quickHint {
+  border: 1px solid rgba(56, 189, 248, 0.2);
+  background: rgba(56, 189, 248, 0.06);
+  border-radius: 13px;
+  padding: 11px 12px;
+  color: #abc0d8;
+  font-size: 12px;
+  margin-bottom: 14px;
+}
+
+.publishForm {
+  display: grid;
+  gap: 14px;
+}
+
+.fileBox {
+  border: 1px dashed rgba(133, 240, 179, 0.38);
+  background: rgba(133, 240, 179, 0.04);
+  border-radius: 15px;
+  padding: 15px;
+}
+
+.fileBox input {
+  width: 100%;
+  margin-top: 8px;
+}
+
+.copyPreview {
+  border: 1px solid rgba(148, 163, 184, 0.14);
+  background: rgba(8, 14, 23, 0.72);
+  border-radius: 14px;
+  padding: 13px;
+}
+
+.copyPreview strong {
+  display: block;
+  margin-bottom: 7px;
+  font-size: 12px;
+  color: #b8c7da;
+}
+
+.copyPreview p {
+  margin: 0;
+  white-space: pre-wrap;
+  color: #d7e0eb;
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+.advanced {
+  border-top: 1px solid rgba(148, 163, 184, 0.12);
+  padding-top: 11px;
+}
+
+.advanced summary {
+  color: #8fa1b7;
+  cursor: pointer;
+  font-size: 12px;
+  margin-bottom: 10px;
+}
+
+.actions {
+  display: flex;
+  gap: 9px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.primaryWide {
+  flex: 1 1 260px;
+}
+
+.emptyDetail {
+  min-height: 300px;
+  display: grid;
+  place-items: center;
+  text-align: center;
+  color: #7f93ab;
+}
+
+@media (max-width: 900px) {
+  .commandBar,
+  .workbench {
+    grid-template-columns: 1fr;
+  }
+
+  .queueList {
+    max-height: 330px;
+  }
+}
