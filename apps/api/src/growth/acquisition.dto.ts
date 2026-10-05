@@ -1,5 +1,5 @@
 import { Type } from "class-transformer";
-import { IsBoolean, IsEmail, IsEnum, IsInt, IsOptional, IsString, IsUrl, Max, MaxLength, Min, MinLength } from "class-validator";
+import { IsBoolean, IsEmail, IsEnum, IsInt, IsOptional, IsString, Max, MaxLength, Min, MinLength } from "class-validator";
 import { CampaignObjective } from "@prisma/client";
 
 export class CreateAcquisitionPlanDto {
@@ -62,7 +62,8 @@ export class ImportAcquisitionProspectDto {
   email?: string;
 
   @IsOptional()
-  @IsUrl({ require_protocol: true })
+  @IsString()
+  @MaxLength(500)
   website?: string;
 
   @IsOptional()
