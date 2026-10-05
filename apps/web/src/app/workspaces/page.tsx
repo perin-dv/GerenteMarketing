@@ -7,7 +7,7 @@ export default async function WorkspacesPage() {
   const { me, data } = await getProtectedJson<any[]>("/workspace/companies");
   if (!me) redirect("/login");
   return (
-    <AppFrame me={me} active="" eyebrow="SAAS MULTIEMPRESA" title="Workspaces">
+    <AppFrame me={me} active="Workspaces" eyebrow="SAAS MULTIEMPRESA" title="Workspaces">
       <div className="page-intro"><div><h2>Uma conta, várias empresas</h2><p>Dados, campanhas, integrações e leads continuam isolados por companyId. A troca emite uma nova sessão para o workspace selecionado.</p></div></div>
       <WorkspaceManager initial={data || []} />
     </AppFrame>

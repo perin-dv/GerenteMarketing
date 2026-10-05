@@ -164,6 +164,7 @@ export function AcquisitionManager({ initialPlans }: { initialPlans: Plan[] }) {
               <label style={{ display: "flex", alignItems: "center", gap: 10 }}><input name="includeInstagram" type="checkbox" defaultChecked style={{ width: "auto" }} />Instagram</label>
               <label style={{ display: "flex", alignItems: "center", gap: 10 }}><input name="includeTikTok" type="checkbox" defaultChecked style={{ width: "auto" }} />TikTok</label>
             </div>
+            <small>Instagram e TikTok entram no plano de aquisição. A publicação automática só acontece quando o canal tiver publicação oficial habilitada; no TikTok, por enquanto o GerenteMarketing conecta e lê métricas, mas ainda não faz autopost.</small>
             <button className="primary-button" disabled={busy}>{busy ? "Montando aquisição..." : "Criar plano para buscar clientes"}</button>
             {message ? <div className="status-message">{message}</div> : null}
           </form>

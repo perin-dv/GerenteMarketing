@@ -210,8 +210,8 @@ export class RecommendationsController {
   constructor(private readonly growth: GrowthService) {}
 
   @Get()
-  list(@Req() request: AuthenticatedRequest) {
-    return this.growth.listRecommendations(request.user?.companyId);
+  list(@Req() request: AuthenticatedRequest, @Query("history") history?: string) {
+    return this.growth.listRecommendations(request.user?.companyId, history === "true");
   }
 
   @Post("generate")
