@@ -13,6 +13,8 @@ import {
 } from "./growth.controllers";
 import { GrowthService } from "./growth.service";
 import { MetaBusinessLoginService } from "./meta-business-login.service";
+import { MetaPublishingController } from "./meta-publishing.controller";
+import { MetaPublishingService } from "./meta-publishing.service";
 import { WhatsappConversationController } from "./whatsapp-conversation.controller";
 import { WhatsappConversationService } from "./whatsapp-conversation.service";
 import { WhatsappRelayController } from "./whatsapp-relay.controller";
@@ -26,6 +28,7 @@ import { WhatsappRelayController } from "./whatsapp-relay.controller";
     WhatsappConversationController,
     MetricsController,
     ContentController,
+    MetaPublishingController,
     RecommendationsController,
     ExperimentsController,
     AutopilotController,
@@ -34,6 +37,7 @@ import { WhatsappRelayController } from "./whatsapp-relay.controller";
   providers: [
     GrowthService,
     MetaBusinessLoginService,
+    MetaPublishingService,
     WhatsappConversationService,
     PrismaService,
   ],
