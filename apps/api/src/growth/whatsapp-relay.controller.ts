@@ -12,23 +12,22 @@ import type { Request } from "express";
 import { createHmac, timingSafeEqual } from "node:crypto";
 import { PrismaService } from "../prisma.service";
 import { GrowthService } from "./growth.service";
+import { WhatsappConversationService } from "./whatsapp-conversation.service";
 
 @Controller("webhooks/whatsapp/relay")
 export class WhatsappRelayController {
   constructor(
     private readonly growth: GrowthService,
     private readonly prisma: PrismaService,
+    private readonly conversations: WhatsappConversationService,
   ) {}
 
-  @Post()
-  async receive(
-    @Req() request: RawBodyRequest<Request>,
-    @Headers("x-gerentemarketing-relay-signature") providedSignature?: string,
+  private verify(
+    request: RawBodyRequest<Request>,
+    providedSignature?: string,
   ) {
     const appSecret = process.env.META_APP_SECRET || "";
-    if (!appSecret) {
-      throw new ServiceUnavailableException("META_APP_SECRET não configurado.");
-    }
+    if (!appSecret) throw new ServiceUnavailableException("META_APP_SECRET não configurado.");
     if (!request.rawBody || !providedSignature?.startsWith("sha256=")) {
       throw new ForbiddenException("Assinatura do relay ausente.");
     }
@@ -39,9 +38,18 @@ export class WhatsappRelayController {
     if (provided.length !== expected.length || !timingSafeEqual(provided, expected)) {
       throw new ForbiddenException("Assinatura do relay inválida.");
     }
+  }
 
+  @Post()
+  async receive(
+    @Req() request: RawBodyRequest<Request>,
+    @Headers("x-gerentemarketing-relay-signature") providedSignature?: string,
+  ) {
+    this.verify(request, providedSignature);
     const result = await this.growth.receiveWhatsappWebhook(request.body);
+
     if (result.messagesProcessed > 0) {
+      await this.conversations.recordInboundPayload(request.body);
       const phoneNumberIds = new Set<string>();
       for (const entry of Array.isArray(request.body?.entry) ? request.body.entry : []) {
         for (const change of Array.isArray(entry?.changes) ? entry.changes : []) {
@@ -62,5 +70,14 @@ export class WhatsappRelayController {
     }
 
     return result;
+  }
+
+  @Post("message")
+  async receiveMessage(
+    @Req() request: RawBodyRequest<Request>,
+    @Headers("x-gerentemarketing-relay-signature") providedSignature?: string,
+  ) {
+    this.verify(request, providedSignature);
+    return this.conversations.recordOutboundEvent(request.body);
   }
 }
