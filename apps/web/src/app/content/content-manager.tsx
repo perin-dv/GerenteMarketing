@@ -7,6 +7,13 @@ const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
 
 type FilterKey = "ALL" | "REEL" | "POST" | "STORY" | "PUBLISHED";
 
+const HASHTAG_STOPWORDS = new Set([
+  "para", "com", "sem", "uma", "uns", "umas", "que", "por", "seu", "sua", "seus", "suas",
+  "voce", "voces", "isso", "essa", "esse", "esta", "este", "como", "mais", "muito", "muita",
+  "reel", "reels", "post", "story", "stories", "campanha", "conteudo", "crescimento", "organico",
+  "chame", "fale", "gente", "duvida", "pedir", "orcamento", "agora", "melhor", "dica", "rapida",
+]);
+
 async function api(path: string, init?: RequestInit) {
   const response = await fetch(`${apiUrl}${path}`, { credentials: "include", ...init });
   const data = await response.json().catch(() => ({}));
@@ -14,24 +21,96 @@ async function api(path: string, init?: RequestInit) {
   return data;
 }
 
+function hashtagToken(value: string) {
+  return value
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-zA-Z0-9]/g, "")
+    .trim();
+}
+
+function autoHashtags(item: any) {
+  const text = [
+    item?.title,
+    item?.hook,
+    item?.script,
+    item?.caption,
+    item?.cta,
+    item?.campaign?.name,
+  ].filter(Boolean).join(" ");
+  const lower = text.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+  const tags: string[] = [];
+
+  const add = (...values: string[]) => {
+    for (const value of values) {
+      const clean = hashtagToken(value);
+      if (clean.length < 2) continue;
+      const key = clean.toLowerCase();
+      if (!tags.some((tag) => tag.toLowerCase() === key)) tags.push(clean);
+    }
+  };
+
+  if (/tem\s*na\s*loja/.test(lower)) {
+    add("TemNaLoja", "Autopecas", "PecasAutomotivas", "Carros", "DicasAutomotivas", "Maringa", "Parana");
+  }
+
+  if (/(autopec|automot|carro|veiculo|peca|motor|oficina)/.test(lower)) {
+    add("Autopecas", "PecasAutomotivas", "DicasAutomotivas", "ManutencaoAutomotiva");
+  }
+  if (/(lampad|farol|iluminacao|\bh4\b|\bh7\b)/.test(lower)) {
+    add("LampadasAutomotivas", "IluminacaoAutomotiva", "Farol");
+  }
+  if (/\bh4\b/.test(lower)) add("H4", "LampadaH4");
+  if (/\bh7\b/.test(lower)) add("H7", "LampadaH7");
+  if (/(bosch|ngk|osram|philips)/.test(lower)) {
+    for (const brand of ["Bosch", "NGK", "Osram", "Philips"]) {
+      if (lower.includes(brand.toLowerCase())) add(brand);
+    }
+  }
+
+  const keywordSource = [item?.caption, item?.hook, item?.script].filter(Boolean).join(" ");
+  const words = keywordSource
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .match(/[A-Za-z0-9]{3,}/g) || [];
+
+  for (const word of words) {
+    const clean = hashtagToken(word);
+    const lowerWord = clean.toLowerCase();
+    if (clean.length < 4 || HASHTAG_STOPWORDS.has(lowerWord)) continue;
+    add(clean.charAt(0).toUpperCase() + clean.slice(1));
+    if (tags.length >= 10) break;
+  }
+
+  return tags.slice(0, 10).map((tag) => `#${tag}`);
+}
+
 function autoCaption(item: any) {
   const current = String(item?.caption || "").trim();
   const cta = String(item?.cta || "").trim();
-  if (current) return cta && !current.includes(cta) ? `${current}\n\n${cta}` : current;
+  let base = current;
 
-  const rawHook = String(item?.hook || "").trim();
-  const looksLikeInstruction = /^(comece|use|faça|mostre|explique|crie|apresente)\b/i.test(rawHook);
-  const hook = rawHook && !looksLikeInstruction ? rawHook : "";
-  const type = String(item?.type || "");
-  const opening = hook || (
-    type === "REEL"
-      ? "Dica rápida para ajudar você a escolher melhor e evitar dor de cabeça."
-      : type === "STORY"
-        ? "Uma dica rápida que pode facilitar sua escolha."
-        : "Informação prática para ajudar você a decidir com mais segurança."
-  );
-  const action = cta || "Fale com a gente para tirar sua dúvida ou pedir um orçamento.";
-  return `${opening}\n\n${action}`;
+  if (!base) {
+    const rawHook = String(item?.hook || "").trim();
+    const looksLikeInstruction = /^(comece|use|faça|mostre|explique|crie|apresente)\b/i.test(rawHook);
+    const hook = rawHook && !looksLikeInstruction ? rawHook : "";
+    const type = String(item?.type || "");
+    const opening = hook || (
+      type === "REEL"
+        ? "Dica rápida para ajudar você a escolher melhor e evitar dor de cabeça."
+        : type === "STORY"
+          ? "Uma dica rápida que pode facilitar sua escolha."
+          : "Informação prática para ajudar você a decidir com mais segurança."
+    );
+    const action = cta || "Fale com a gente para tirar sua dúvida ou pedir um orçamento.";
+    base = `${opening}\n\n${action}`;
+  } else if (cta && !base.includes(cta)) {
+    base = `${base}\n\n${cta}`;
+  }
+
+  const existing = new Set((base.match(/#[A-Za-z0-9_]+/g) || []).map((tag) => tag.toLowerCase()));
+  const hashtags = autoHashtags(item).filter((tag) => !existing.has(tag.toLowerCase()));
+  return hashtags.length ? `${base}\n\n${hashtags.join(" ")}` : base;
 }
 
 function statusDotClass(status: string) {
@@ -196,7 +275,7 @@ export function ContentManager({
         <div className={styles.commandCopy}>
           <span className="eyebrow">FILA DE MARKETING</span>
           <h3 style={{ margin: 0 }}>Você entra com a mídia. O sistema cuida da publicação.</h3>
-          <p>Legenda e CTA são preenchidos automaticamente pelo plano. Você só edita se quiser.</p>
+          <p>Legenda, CTA e hashtags relevantes são preenchidos automaticamente. Você só edita se quiser.</p>
         </div>
         <form className={styles.commandForm} onSubmit={generate}>
           <label>
@@ -270,7 +349,7 @@ export function ContentManager({
                 </div>
               ) : supportsMetaPublish(selected) && metaAccounts.length ? (
                 <>
-                  <div className={styles.quickHint}><strong>Fluxo rápido:</strong> escolha o arquivo → confira a legenda automática → publicar. Depois o sistema já pula para a próxima peça.</div>
+                  <div className={styles.quickHint}><strong>Fluxo rápido:</strong> escolha o arquivo → confira legenda + hashtags automáticas → publicar. Depois o sistema já pula para a próxima peça.</div>
                   <form className={styles.publishForm} onSubmit={(event) => publish(event, selected)}>
                     {metaAccounts.length === 1 ? (
                       <>
@@ -295,15 +374,15 @@ export function ContentManager({
                     </label>
 
                     <div className={styles.copyPreview}>
-                      <strong>Legenda que será usada automaticamente</strong>
+                      <strong>Legenda + hashtags que serão usadas automaticamente</strong>
                       <p>{generatedCaption}</p>
                     </div>
 
                     <details className={styles.advanced}>
-                      <summary>Editar legenda ou opções avançadas</summary>
+                      <summary>Editar legenda, hashtags ou opções avançadas</summary>
                       <label>
-                        Legenda
-                        <textarea name="caption" defaultValue={generatedCaption} rows={5} />
+                        Legenda completa
+                        <textarea name="caption" defaultValue={generatedCaption} rows={7} />
                       </label>
                     </details>
 
