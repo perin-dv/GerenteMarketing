@@ -1,6 +1,8 @@
 import { Module } from "@nestjs/common";
 import { AuthModule } from "../auth/auth.module";
 import { PrismaService } from "../prisma.service";
+import { AcquisitionController } from "./acquisition.controller";
+import { AcquisitionService } from "./acquisition.service";
 import { AutoCampaignController } from "./auto-campaign.controller";
 import { AutoCampaignService } from "./auto-campaign.service";
 import { AutoPublishSchedulerService } from "./auto-publish-scheduler.service";
@@ -36,6 +38,7 @@ import { WhatsappRelayController } from "./whatsapp-relay.controller";
     WhatsappRelayController,
     WhatsappConversationController,
     WhatsappCampaignController,
+    AcquisitionController,
     MetricsController,
     ContentController,
     MetaPublishingController,
@@ -56,6 +59,7 @@ import { WhatsappRelayController } from "./whatsapp-relay.controller";
     AutoCampaignService,
     AutoPublishSchedulerService,
     WhatsappCampaignService,
+    AcquisitionService,
     WhatsappConversationService,
     PrismaService,
   ],
