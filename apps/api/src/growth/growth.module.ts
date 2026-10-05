@@ -12,6 +12,8 @@ import {
   WhatsappWebhookController,
 } from "./growth.controllers";
 import { GrowthService } from "./growth.service";
+import { MediaController } from "./media.controller";
+import { MediaStorageService } from "./media-storage.service";
 import { MetaBusinessLoginService } from "./meta-business-login.service";
 import { MetaPublishingController } from "./meta-publishing.controller";
 import { MetaPublishingService } from "./meta-publishing.service";
@@ -29,6 +31,7 @@ import { WhatsappRelayController } from "./whatsapp-relay.controller";
     MetricsController,
     ContentController,
     MetaPublishingController,
+    MediaController,
     RecommendationsController,
     ExperimentsController,
     AutopilotController,
@@ -38,6 +41,7 @@ import { WhatsappRelayController } from "./whatsapp-relay.controller";
     GrowthService,
     MetaBusinessLoginService,
     MetaPublishingService,
+    MediaStorageService,
     WhatsappConversationService,
     PrismaService,
   ],
