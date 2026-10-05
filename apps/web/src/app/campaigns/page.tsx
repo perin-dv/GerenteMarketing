@@ -1,6 +1,7 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { AppFrame, type AppUser } from "../_components/app-frame";
+import { AutoCampaignManager } from "./auto-campaign-manager";
 import { CampaignManager } from "./campaign-manager";
 
 const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
@@ -26,10 +27,11 @@ export default async function CampaignsPage() {
     <AppFrame me={me} active="Campanhas" eyebrow="CRESCIMENTO ORGÂNICO" title="Campanhas">
       <div className="page-intro">
         <div>
-          <h2>Faça marketing mesmo com R$ 0</h2>
-          <p>Planeje conteúdo, frequência, canal e objetivo. O modo orgânico é o padrão; mídia paga fica opcional para quando você quiser.</p>
+          <h2>Do lote de vídeos para uma campanha automática</h2>
+          <p>Você entrega as mídias uma vez. O GerenteMarketing organiza, agenda e publica cada peça sem ficar repetindo o mesmo vídeo.</p>
         </div>
       </div>
+      <AutoCampaignManager />
       <CampaignManager initialCampaigns={campaigns} />
     </AppFrame>
   );

@@ -1,4 +1,5 @@
 import { BadRequestException, Injectable, NotFoundException, ServiceUnavailableException } from "@nestjs/common";
+import { createHash } from "node:crypto";
 import { createReadStream } from "node:fs";
 import { mkdir, stat } from "node:fs/promises";
 import { basename, extname, join } from "node:path";
@@ -36,6 +37,16 @@ export class MediaStorageService {
       throw new BadRequestException("Formato não suportado nesta etapa. Use JPG/JPEG para imagem ou MP4 para vídeo.");
     }
     return file;
+  }
+
+  async fingerprintFile(filepath: string) {
+    return new Promise<string>((resolve, reject) => {
+      const hash = createHash("sha256");
+      const stream = createReadStream(filepath);
+      stream.on("data", (chunk) => hash.update(chunk));
+      stream.on("error", reject);
+      stream.on("end", () => resolve(hash.digest("hex")));
+    });
   }
 
   async sendPublicFile(filenameInput: string, response: Response) {
