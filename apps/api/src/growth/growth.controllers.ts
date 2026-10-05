@@ -14,9 +14,10 @@ import {
   Res,
   UseGuards,
 } from "@nestjs/common";
-import { MetricKey } from "@prisma/client";
+import { IntegrationProvider, IntegrationStatus, LeadSource, MetricKey } from "@prisma/client";
 import type { Request, Response } from "express";
 import { AuthGuard, type AuthenticatedRequest } from "../auth/auth.guard";
+import { PrismaService } from "../prisma.service";
 import {
   ConnectWhatsappDto,
   CreateContentDto,
@@ -38,6 +39,7 @@ export class IntegrationsController {
   constructor(
     private readonly growth: GrowthService,
     private readonly metaLogin: MetaBusinessLoginService,
+    private readonly prisma: PrismaService,
   ) {}
 
   @Get()
@@ -88,6 +90,36 @@ export class IntegrationsController {
   @UseGuards(AuthGuard)
   connectWhatsapp(@Req() request: AuthenticatedRequest, @Body() dto: ConnectWhatsappDto) {
     return this.growth.connectWhatsapp(request.user?.companyId, request.user!.sub, dto);
+  }
+
+  @Post("whatsapp/test")
+  @UseGuards(AuthGuard)
+  async testWhatsapp(@Req() request: AuthenticatedRequest) {
+    const companyId = request.user?.companyId;
+    if (!companyId) throw new BadRequestException("Nenhuma empresa ativa na sessão.");
+
+    const integration = await this.prisma.integrationAccount.findFirst({
+      where: {
+        companyId,
+        provider: IntegrationProvider.WHATSAPP,
+        status: IntegrationStatus.CONNECTED,
+      },
+      orderBy: { updatedAt: "desc" },
+    });
+    if (!integration) throw new BadRequestException("Nenhum WhatsApp conectado nesta empresa.");
+
+    const latestConversation = await this.prisma.conversation.findFirst({
+      where: { companyId, source: LeadSource.WHATSAPP },
+      orderBy: { lastMessageAt: "desc" },
+      select: { lastMessageAt: true, messageCount: true },
+    });
+
+    return {
+      ok: true,
+      connected: true,
+      lastMessageAt: latestConversation?.lastMessageAt ?? integration.lastSyncedAt,
+      messageCount: latestConversation?.messageCount ?? 0,
+    };
   }
 
   @Delete(":id")

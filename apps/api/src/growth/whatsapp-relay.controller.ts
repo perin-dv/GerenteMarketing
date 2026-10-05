@@ -7,16 +7,21 @@ import {
   Req,
   ServiceUnavailableException,
 } from "@nestjs/common";
+import { IntegrationProvider, IntegrationStatus } from "@prisma/client";
 import type { Request } from "express";
 import { createHmac, timingSafeEqual } from "node:crypto";
+import { PrismaService } from "../prisma.service";
 import { GrowthService } from "./growth.service";
 
 @Controller("webhooks/whatsapp/relay")
 export class WhatsappRelayController {
-  constructor(private readonly growth: GrowthService) {}
+  constructor(
+    private readonly growth: GrowthService,
+    private readonly prisma: PrismaService,
+  ) {}
 
   @Post()
-  receive(
+  async receive(
     @Req() request: RawBodyRequest<Request>,
     @Headers("x-gerentemarketing-relay-signature") providedSignature?: string,
   ) {
@@ -35,6 +40,27 @@ export class WhatsappRelayController {
       throw new ForbiddenException("Assinatura do relay inválida.");
     }
 
-    return this.growth.receiveWhatsappWebhook(request.body);
+    const result = await this.growth.receiveWhatsappWebhook(request.body);
+    if (result.messagesProcessed > 0) {
+      const phoneNumberIds = new Set<string>();
+      for (const entry of Array.isArray(request.body?.entry) ? request.body.entry : []) {
+        for (const change of Array.isArray(entry?.changes) ? entry.changes : []) {
+          const phoneNumberId = change?.value?.metadata?.phone_number_id;
+          if (typeof phoneNumberId === "string" && phoneNumberId) phoneNumberIds.add(phoneNumberId);
+        }
+      }
+      if (phoneNumberIds.size) {
+        await this.prisma.integrationAccount.updateMany({
+          where: {
+            provider: IntegrationProvider.WHATSAPP,
+            status: IntegrationStatus.CONNECTED,
+            externalAccountId: { in: [...phoneNumberIds] },
+          },
+          data: { lastSyncedAt: new Date() },
+        });
+      }
+    }
+
+    return result;
   }
 }
