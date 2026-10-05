@@ -21,7 +21,7 @@ export default async function GrowthPage() {
   const { me } = await getProtectedJson("/integrations/readiness");
   if (!me) redirect("/login");
   return (
-    <AppFrame me={me} active="" eyebrow="GROWTH OS" title="Central de crescimento">
+    <AppFrame me={me} active="Growth OS" eyebrow="GROWTH OS" title="Central de crescimento">
       <div className="page-intro"><div><h2>Growth OS em operação</h2><p>Aquisição primeiro: criar demanda, transformar interesse em WhatsApp/lead e aprender com o que realmente converte.</p></div></div>
       <section className="metric-grid">
         {areas.map(([title, href, text]) => (
