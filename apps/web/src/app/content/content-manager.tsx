@@ -6,6 +6,13 @@ import styles from "./content-manager.module.css";
 const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
 
 type FilterKey = "ALL" | "REEL" | "POST" | "STORY" | "PUBLISHED";
+type LearnedHashtag = {
+  hashtag?: string;
+  posts?: number;
+  engagements?: number;
+  reach?: number;
+  views?: number;
+};
 
 const HASHTAG_STOPWORDS = new Set([
   "para", "com", "sem", "uma", "uns", "umas", "que", "por", "seu", "sua", "seus", "suas",
@@ -29,7 +36,7 @@ function hashtagToken(value: string) {
     .trim();
 }
 
-function autoHashtags(item: any) {
+function autoHashtags(item: any, learnedHashtags: LearnedHashtag[] = []) {
   const text = [
     item?.title,
     item?.hook,
@@ -68,6 +75,11 @@ function autoHashtags(item: any) {
     }
   }
 
+  for (const learned of learnedHashtags.slice(0, 3)) {
+    const hashtag = String(learned?.hashtag || "").replace(/^#/, "");
+    if (hashtag) add(hashtag);
+  }
+
   const keywordSource = [item?.caption, item?.hook, item?.script].filter(Boolean).join(" ");
   const words = keywordSource
     .normalize("NFD")
@@ -85,7 +97,7 @@ function autoHashtags(item: any) {
   return tags.slice(0, 10).map((tag) => `#${tag}`);
 }
 
-function autoCaption(item: any) {
+function autoCaption(item: any, learnedHashtags: LearnedHashtag[] = []) {
   const current = String(item?.caption || "").trim();
   const cta = String(item?.cta || "").trim();
   let base = current;
@@ -109,7 +121,7 @@ function autoCaption(item: any) {
   }
 
   const existing = new Set((base.match(/#[A-Za-z0-9_]+/g) || []).map((tag) => tag.toLowerCase()));
-  const hashtags = autoHashtags(item).filter((tag) => !existing.has(tag.toLowerCase()));
+  const hashtags = autoHashtags(item, learnedHashtags).filter((tag) => !existing.has(tag.toLowerCase()));
   return hashtags.length ? `${base}\n\n${hashtags.join(" ")}` : base;
 }
 
@@ -124,10 +136,12 @@ export function ContentManager({
   initial,
   campaigns,
   integrations,
+  learnedHashtags,
 }: {
   initial: any[];
   campaigns: any[];
   integrations: any[];
+  learnedHashtags: LearnedHashtag[];
 }) {
   const [items, setItems] = useState(initial || []);
   const [message, setMessage] = useState("");
@@ -150,7 +164,7 @@ export function ContentManager({
   }, [filter, items]);
 
   const selected = items.find((item) => item.id === selectedId) || visibleItems[0] || items[0];
-  const generatedCaption = selected ? autoCaption(selected) : "";
+  const generatedCaption = selected ? autoCaption(selected, learnedHashtags) : "";
 
   async function refresh() {
     const updated = await api("/content");
@@ -205,7 +219,7 @@ export function ContentManager({
     const formElement = event.currentTarget;
     const form = new FormData(formElement);
     const integrationId = String(form.get("integrationId") || "").trim();
-    const caption = String(form.get("caption") || "").trim() || autoCaption(item);
+    const caption = String(form.get("caption") || "").trim() || autoCaption(item, learnedHashtags);
     const mediaValue = form.get("mediaFile");
     const mediaFile = mediaValue instanceof File ? mediaValue : null;
 
@@ -275,7 +289,7 @@ export function ContentManager({
         <div className={styles.commandCopy}>
           <span className="eyebrow">FILA DE MARKETING</span>
           <h3 style={{ margin: 0 }}>Você entra com a mídia. O sistema cuida da publicação.</h3>
-          <p>Legenda, CTA e hashtags relevantes são preenchidos automaticamente. Você só edita se quiser.</p>
+          <p>Legenda, CTA e hashtags relevantes são preenchidos automaticamente. As melhores hashtags já medidas podem voltar para os próximos posts.</p>
         </div>
         <form className={styles.commandForm} onSubmit={generate}>
           <label>
@@ -376,6 +390,7 @@ export function ContentManager({
                     <div className={styles.copyPreview}>
                       <strong>Legenda + hashtags que serão usadas automaticamente</strong>
                       <p>{generatedCaption}</p>
+                      {learnedHashtags.length ? <small>Aprendizado ativo: até 3 hashtags de melhor desempenho da sua conta podem ser reaproveitadas automaticamente.</small> : <small>Depois das primeiras leituras em Performance, o sistema passa a reaproveitar hashtags que deram resultado.</small>}
                     </div>
 
                     <details className={styles.advanced}>

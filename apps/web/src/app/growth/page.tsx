@@ -6,6 +6,7 @@ import { getProtectedJson } from "../_lib/server-data";
 const areas: Array<[string, string, string]> = [
   ["Integrações", "/integrations", "Meta/Instagram e WhatsApp oficial"],
   ["Conteúdo", "/content", "Fila de Reels, posts e stories"],
+  ["Performance", "/performance", "Aprende com alcance, views, engajamento e hashtags reais"],
   ["Radar IA", "/radar", "Recomendações com evidência"],
   ["Experimentos", "/experiments", "Testes A/B e vencedores"],
   ["Autopilot", "/autopilot", "Políticas, limites e kill switch"],
@@ -19,7 +20,7 @@ export default async function GrowthPage() {
   if (!me) redirect("/login");
   return (
     <AppFrame me={me} active="" eyebrow="GROWTH OS" title="Central de crescimento">
-      <div className="page-intro"><div><h2>Fases 5–13 em uma central</h2><p>Dados reais, conteúdo, decisão, testes, automação controlada, canais e operação multiempresa.</p></div></div>
+      <div className="page-intro"><div><h2>Growth OS em operação</h2><p>Dados reais, conteúdo, leitura de performance, decisão, testes, automação controlada, canais e operação multiempresa.</p></div></div>
       <section className="metric-grid">
         {areas.map(([title, href, text]) => (
           <Link href={href} key={href} className="metric-card" style={{ textDecoration: "none" }}>
