@@ -22,6 +22,8 @@ import { MetaPerformanceController } from "./meta-performance.controller";
 import { MetaPerformanceService } from "./meta-performance.service";
 import { MetaPublishingController } from "./meta-publishing.controller";
 import { MetaPublishingService } from "./meta-publishing.service";
+import { WhatsappCampaignController } from "./whatsapp-campaign.controller";
+import { WhatsappCampaignService } from "./whatsapp-campaign.service";
 import { WhatsappConversationController } from "./whatsapp-conversation.controller";
 import { WhatsappConversationService } from "./whatsapp-conversation.service";
 import { WhatsappRelayController } from "./whatsapp-relay.controller";
@@ -33,6 +35,7 @@ import { WhatsappRelayController } from "./whatsapp-relay.controller";
     WhatsappWebhookController,
     WhatsappRelayController,
     WhatsappConversationController,
+    WhatsappCampaignController,
     MetricsController,
     ContentController,
     MetaPublishingController,
@@ -52,6 +55,7 @@ import { WhatsappRelayController } from "./whatsapp-relay.controller";
     MediaStorageService,
     AutoCampaignService,
     AutoPublishSchedulerService,
+    WhatsappCampaignService,
     WhatsappConversationService,
     PrismaService,
   ],
