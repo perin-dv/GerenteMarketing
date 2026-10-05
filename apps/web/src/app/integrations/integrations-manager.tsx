@@ -17,6 +17,7 @@ export function IntegrationsManager({ initial, readiness }: { initial: any[]; re
   const [busy, setBusy] = useState(false);
 
   const visibleItems = useMemo(() => items.filter((item) => item.status !== "DISCONNECTED"), [items]);
+  const connectedMeta = visibleItems.find((item) => item.provider === "META_INSTAGRAM" && item.status === "CONNECTED");
   const connectedWhatsapp = visibleItems.find((item) => item.provider === "WHATSAPP" && item.status === "CONNECTED");
 
   async function connectMeta() {
@@ -97,8 +98,8 @@ export function IntegrationsManager({ initial, readiness }: { initial: any[]; re
     <>
       <section className="summary-strip">
         <div><span>Conectadas</span><strong>{visibleItems.filter((item) => item.status === "CONNECTED").length}</strong></div>
-        <div><span>Meta pronta</span><strong>{readiness?.meta?.ready ? "SIM" : "NÃO"}</strong></div>
-        <div><span>WhatsApp pronto</span><strong>{readiness?.whatsapp?.ready ? "SIM" : "NÃO"}</strong></div>
+        <div><span>Meta conectada</span><strong>{connectedMeta ? "SIM" : "NÃO"}</strong></div>
+        <div><span>WhatsApp conectado</span><strong>{connectedWhatsapp ? "SIM" : "NÃO"}</strong></div>
       </section>
 
       <section className="workspace-grid">
