@@ -69,6 +69,13 @@ export class AutoPublishSchedulerService implements OnModuleInit, OnModuleDestro
         });
         if (publishedLast24h >= policy.maxActionsPerDay) continue;
 
+        const owner = await this.prisma.membership.findFirst({
+          where: { companyId: item.companyId },
+          select: { userId: true },
+          orderBy: { createdAt: "asc" },
+        });
+        if (!owner) continue;
+
         const claimed = await this.prisma.contentItem.updateMany({
           where: { id: item.id, status: ContentStatus.SCHEDULED },
           data: { status: ContentStatus.READY },
@@ -76,7 +83,7 @@ export class AutoPublishSchedulerService implements OnModuleInit, OnModuleDestro
         if (claimed.count !== 1) continue;
 
         try {
-          await this.publisher.publish(item.companyId, null, item.id, {
+          await this.publisher.publish(item.companyId, owner.userId, item.id, {
             mediaUrl,
             mediaKind,
             integrationId: typeof media.integrationId === "string" && media.integrationId ? media.integrationId : undefined,
