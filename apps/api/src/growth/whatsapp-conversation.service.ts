@@ -34,7 +34,7 @@ export class WhatsappConversationService {
     const raw = Array.isArray(metadata.messages) ? metadata.messages : [];
     return raw
       .filter((item): item is Record<string, unknown> => Boolean(item) && typeof item === "object" && !Array.isArray(item))
-      .map((item) => ({
+      .map((item): StoredWhatsappMessage => ({
         id: String(item.id || ""),
         direction: item.direction === "OUTBOUND" ? "OUTBOUND" : "INBOUND",
         type: String(item.type || "text"),
