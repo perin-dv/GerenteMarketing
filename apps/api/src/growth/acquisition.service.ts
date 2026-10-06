@@ -410,10 +410,40 @@ export class AcquisitionService {
       take: 100,
     });
 
-    return leads.map((lead) => {
+    const items = leads.map((lead) => {
       const metadata = this.metadataObject(lead.metadata);
       const outreach = this.metadataObject(metadata.outreach);
       const nextFollowUpAt = typeof outreach.nextFollowUpAt === "string" ? outreach.nextFollowUpAt : null;
+      const due = Boolean(nextFollowUpAt && new Date(nextFollowUpAt).getTime() <= Date.now());
+      const score = this.prospectScore(lead);
+      const outreachStatus = typeof outreach.status === "string"
+        ? outreach.status
+        : typeof metadata.outreachStatus === "string"
+          ? metadata.outreachStatus
+          : "REVIEW_REQUIRED";
+
+      let priority: "HOT" | "WARM" | "REVIEW" | "DONE" = "REVIEW";
+      let priorityReason = "Revisar dados públicos e decidir se vale uma abordagem.";
+      if (lead.stage === LeadStage.WON || lead.stage === LeadStage.LOST) {
+        priority = "DONE";
+        priorityReason = lead.stage === LeadStage.WON ? "Prospect convertido em cliente." : "Prospect encerrado sem interesse.";
+      } else if (due) {
+        priority = "HOT";
+        priorityReason = "Follow-up vencido: precisa de ação hoje.";
+      } else if (outreachStatus === "REPLIED") {
+        priority = "HOT";
+        priorityReason = "Prospect respondeu e está mais perto de avançar.";
+      } else if (score >= 70 && ["DRAFT_READY", "CONTACTED", "FOLLOW_UP_DUE"].includes(outreachStatus)) {
+        priority = "HOT";
+        priorityReason = "Boa qualidade de contato e abordagem já iniciada.";
+      } else if (score >= 50 || ["DRAFT_READY", "CONTACTED"].includes(outreachStatus)) {
+        priority = "WARM";
+        priorityReason = outreachStatus === "DRAFT_READY"
+          ? "Abordagem pronta para revisão e primeiro contato."
+          : "Prospect com dados suficientes para priorizar.";
+      }
+
+      const priorityWeight = priority === "HOT" ? 3 : priority === "WARM" ? 2 : priority === "REVIEW" ? 1 : 0;
       return {
         id: lead.id,
         name: lead.name,
@@ -426,22 +456,27 @@ export class AcquisitionService {
         category: typeof metadata.category === "string" ? metadata.category : null,
         address: typeof metadata.address === "string" ? metadata.address : null,
         publicSource: typeof metadata.publicSource === "string" ? metadata.publicSource : null,
-        score: this.prospectScore(lead),
+        score,
+        priority,
+        priorityReason,
+        priorityWeight,
         outreach: {
-          status: typeof outreach.status === "string"
-            ? outreach.status
-            : typeof metadata.outreachStatus === "string"
-              ? metadata.outreachStatus
-              : "REVIEW_REQUIRED",
+          status: outreachStatus,
           offer: typeof outreach.offer === "string" ? outreach.offer : null,
           preparedAt: typeof outreach.preparedAt === "string" ? outreach.preparedAt : null,
           lastContactAt: typeof outreach.lastContactAt === "string" ? outreach.lastContactAt : null,
           nextFollowUpAt,
-          due: Boolean(nextFollowUpAt && new Date(nextFollowUpAt).getTime() <= Date.now()),
+          due,
           drafts: this.metadataObject(outreach.drafts),
         },
       };
     });
+
+    return items.sort((a, b) =>
+      b.priorityWeight - a.priorityWeight ||
+      Number(b.outreach.due) - Number(a.outreach.due) ||
+      b.score - a.score
+    );
   }
 
   async prepareOutreach(
