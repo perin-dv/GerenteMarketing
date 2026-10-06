@@ -7,12 +7,13 @@ import {
   ContentStatus,
   ContentType,
   LeadSource,
+  LeadStage,
   Prisma,
   RecommendationStatus,
   RecommendationType,
 } from "@prisma/client";
 import { PrismaService } from "../prisma.service";
-import { CreateAcquisitionPlanDto, ImportAcquisitionProspectDto } from "./acquisition.dto";
+import { CreateAcquisitionPlanDto, ImportAcquisitionProspectDto, PrepareAcquisitionOutreachDto, UpdateAcquisitionOutreachDto } from "./acquisition.dto";
 
 type NominatimPlace = {
   place_id?: number;
@@ -382,5 +383,198 @@ export class AcquisitionService {
     });
 
     return { ok: true, duplicate: false, lead };
+  }
+
+  private metadataObject(value: Prisma.JsonValue | null | undefined): Record<string, any> {
+    return value && typeof value === "object" && !Array.isArray(value)
+      ? { ...(value as Record<string, any>) }
+      : {};
+  }
+
+  private prospectScore(lead: { phone?: string | null; email?: string | null; metadata?: Prisma.JsonValue | null }) {
+    const metadata = this.metadataObject(lead.metadata);
+    let score = 10;
+    if (lead.phone) score += 35;
+    if (lead.email) score += 25;
+    if (metadata.website) score += 15;
+    if (metadata.category) score += 10;
+    if (metadata.address) score += 5;
+    return Math.min(100, score);
+  }
+
+  async listCrmProspects(companyIdInput: string | null | undefined) {
+    const companyId = this.companyIdOrThrow(companyIdInput);
+    const leads = await this.prisma.lead.findMany({
+      where: { companyId, campaignTag: "PUBLIC_PROSPECTING" },
+      orderBy: { updatedAt: "desc" },
+      take: 100,
+    });
+
+    return leads.map((lead) => {
+      const metadata = this.metadataObject(lead.metadata);
+      const outreach = this.metadataObject(metadata.outreach);
+      const nextFollowUpAt = typeof outreach.nextFollowUpAt === "string" ? outreach.nextFollowUpAt : null;
+      return {
+        id: lead.id,
+        name: lead.name,
+        phone: lead.phone,
+        email: lead.email,
+        stage: lead.stage,
+        source: lead.source,
+        notes: lead.notes,
+        website: typeof metadata.website === "string" ? metadata.website : null,
+        category: typeof metadata.category === "string" ? metadata.category : null,
+        address: typeof metadata.address === "string" ? metadata.address : null,
+        publicSource: typeof metadata.publicSource === "string" ? metadata.publicSource : null,
+        score: this.prospectScore(lead),
+        outreach: {
+          status: typeof outreach.status === "string"
+            ? outreach.status
+            : typeof metadata.outreachStatus === "string"
+              ? metadata.outreachStatus
+              : "REVIEW_REQUIRED",
+          offer: typeof outreach.offer === "string" ? outreach.offer : null,
+          preparedAt: typeof outreach.preparedAt === "string" ? outreach.preparedAt : null,
+          lastContactAt: typeof outreach.lastContactAt === "string" ? outreach.lastContactAt : null,
+          nextFollowUpAt,
+          due: Boolean(nextFollowUpAt && new Date(nextFollowUpAt).getTime() <= Date.now()),
+          drafts: this.metadataObject(outreach.drafts),
+        },
+      };
+    });
+  }
+
+  async prepareOutreach(
+    companyIdInput: string | null | undefined,
+    userId: string,
+    leadId: string,
+    dto: PrepareAcquisitionOutreachDto,
+  ) {
+    const companyId = this.companyIdOrThrow(companyIdInput);
+    const lead = await this.prisma.lead.findFirst({
+      where: { id: leadId, companyId, campaignTag: "PUBLIC_PROSPECTING" },
+    });
+    if (!lead) throw new BadRequestException("Prospect público não encontrado no CRM.");
+
+    const metadata = this.metadataObject(lead.metadata);
+    const category = typeof metadata.category === "string" ? metadata.category : "empresa";
+    const offer = dto.offer.trim();
+    const note = dto.note?.trim();
+    const name = lead.name || "empresa";
+    const context = note ? ` Contexto adicional: ${note}` : "";
+
+    const drafts = {
+      whatsapp:
+        `Olá! Tudo bem? Encontrei o contato comercial da ${name} em uma fonte pública. Trabalho com ${offer} e, pelo perfil de ${category}, achei que pode fazer sentido conversar. Posso te mandar uma apresentação curta?${context} Se não quiser receber contato, me avise e eu não volto a chamar.`,
+      emailSubject: `Possível parceria: ${offer}`,
+      emailBody:
+        `Olá, equipe da ${name}. Encontrei os dados comerciais da empresa em uma fonte pública e estou entrando em contato porque trabalho com ${offer}. Acredito que pode existir uma oportunidade de parceria para o perfil de ${category}. Se fizer sentido, responda este e-mail e eu envio uma apresentação objetiva. Se não houver interesse, sem problema — encerro o contato por aqui.${context}`,
+      phoneOpening:
+        `Olá, falo com a ${name}? Meu contato é sobre ${offer}. Vi o cadastro comercial público da empresa e queria confirmar se faz sentido eu explicar a proposta em menos de um minuto.`,
+      followUp:
+        `Olá! Passando apenas para saber se conseguiu ver minha mensagem sobre ${offer}. Se não for prioridade agora, sem problema e encerro por aqui.`,
+    };
+    const now = new Date().toISOString();
+    const nextMetadata = {
+      ...metadata,
+      outreachStatus: "DRAFT_READY",
+      outreach: {
+        ...this.metadataObject(metadata.outreach),
+        status: "DRAFT_READY",
+        offer,
+        preparedAt: now,
+        lastContactAt: null,
+        nextFollowUpAt: null,
+        drafts,
+      },
+    };
+
+    const updated = await this.prisma.lead.update({
+      where: { id: lead.id },
+      data: { metadata: this.json(nextMetadata) },
+    });
+    await this.prisma.auditLog.create({
+      data: {
+        userId,
+        companyId,
+        action: "acquisition.outreach.prepared",
+        metadata: this.json({ leadId: lead.id, offer, automatedSend: false }),
+      },
+    });
+
+    return {
+      ok: true,
+      leadId: updated.id,
+      score: this.prospectScore(updated),
+      outreach: nextMetadata.outreach,
+      message: "Abordagem preparada para revisão. Nenhuma mensagem foi enviada automaticamente.",
+    };
+  }
+
+  async updateOutreach(
+    companyIdInput: string | null | undefined,
+    userId: string,
+    leadId: string,
+    dto: UpdateAcquisitionOutreachDto,
+  ) {
+    const companyId = this.companyIdOrThrow(companyIdInput);
+    const lead = await this.prisma.lead.findFirst({
+      where: { id: leadId, companyId, campaignTag: "PUBLIC_PROSPECTING" },
+    });
+    if (!lead) throw new BadRequestException("Prospect público não encontrado no CRM.");
+
+    const metadata = this.metadataObject(lead.metadata);
+    const currentOutreach = this.metadataObject(metadata.outreach);
+    const now = new Date();
+    const followUpDays = dto.followUpDays ?? (dto.status === "REPLIED" ? 2 : 3);
+    let nextFollowUpAt: string | null = null;
+    let stage = lead.stage;
+
+    if (dto.status === "CONTACTED") {
+      stage = LeadStage.CONTACTED;
+      nextFollowUpAt = new Date(now.getTime() + followUpDays * 86_400_000).toISOString();
+    } else if (dto.status === "REPLIED") {
+      stage = LeadStage.CONTACTED;
+      nextFollowUpAt = new Date(now.getTime() + followUpDays * 86_400_000).toISOString();
+    } else if (dto.status === "FOLLOW_UP_DUE") {
+      stage = LeadStage.CONTACTED;
+      nextFollowUpAt = now.toISOString();
+    } else if (dto.status === "WON") {
+      stage = LeadStage.WON;
+    } else if (dto.status === "NOT_INTERESTED") {
+      stage = LeadStage.LOST;
+    }
+
+    const nextOutreach = {
+      ...currentOutreach,
+      status: dto.status,
+      lastContactAt: ["CONTACTED", "REPLIED", "WON", "NOT_INTERESTED"].includes(dto.status)
+        ? now.toISOString()
+        : currentOutreach.lastContactAt || null,
+      nextFollowUpAt,
+      updatedAt: now.toISOString(),
+    };
+
+    const updated = await this.prisma.lead.update({
+      where: { id: lead.id },
+      data: {
+        stage,
+        metadata: this.json({
+          ...metadata,
+          outreachStatus: dto.status,
+          outreach: nextOutreach,
+        }),
+      },
+    });
+    await this.prisma.auditLog.create({
+      data: {
+        userId,
+        companyId,
+        action: "acquisition.outreach.updated",
+        metadata: this.json({ leadId: lead.id, status: dto.status, nextFollowUpAt }),
+      },
+    });
+
+    return { ok: true, leadId: updated.id, stage: updated.stage, outreach: nextOutreach };
   }
 }

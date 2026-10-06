@@ -38,7 +38,41 @@ type Prospect = {
   publicSource: string;
 };
 
-export function AcquisitionManager({ initialPlans }: { initialPlans: Plan[] }) {
+type CrmProspect = {
+  id: string;
+  name: string | null;
+  phone: string | null;
+  email: string | null;
+  stage: string;
+  website: string | null;
+  category: string | null;
+  address: string | null;
+  publicSource: string | null;
+  score: number;
+  outreach: {
+    status: string;
+    offer: string | null;
+    preparedAt: string | null;
+    lastContactAt: string | null;
+    nextFollowUpAt: string | null;
+    due: boolean;
+    drafts: {
+      whatsapp?: string;
+      emailSubject?: string;
+      emailBody?: string;
+      phoneOpening?: string;
+      followUp?: string;
+    };
+  };
+};
+
+export function AcquisitionManager({
+  initialPlans,
+  initialCrmProspects,
+}: {
+  initialPlans: Plan[];
+  initialCrmProspects: CrmProspect[];
+}) {
   const [plans, setPlans] = useState(initialPlans);
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
@@ -46,6 +80,10 @@ export function AcquisitionManager({ initialPlans }: { initialPlans: Plan[] }) {
   const [prospectMessage, setProspectMessage] = useState("");
   const [prospects, setProspects] = useState<Prospect[]>([]);
   const [imported, setImported] = useState<Record<string, boolean>>({});
+  const [crmProspects, setCrmProspects] = useState<CrmProspect[]>(initialCrmProspects);
+  const [outreachOffer, setOutreachOffer] = useState("");
+  const [outreachBusyId, setOutreachBusyId] = useState<string | null>(null);
+  const [outreachMessage, setOutreachMessage] = useState("");
 
   async function createPlan(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -108,6 +146,68 @@ export function AcquisitionManager({ initialPlans }: { initialPlans: Plan[] }) {
     }
   }
 
+  async function refreshCrmProspects() {
+    const response = await fetch(`${apiUrl}/acquisition/prospects/crm`, { credentials: "include" });
+    if (response.ok) setCrmProspects(await response.json());
+  }
+
+  async function prepareOutreach(leadId: string) {
+    const offer = outreachOffer.trim();
+    if (offer.length < 3) {
+      setOutreachMessage("Informe primeiro o produto ou serviço que você quer oferecer aos prospects.");
+      return;
+    }
+    setOutreachBusyId(leadId);
+    setOutreachMessage("");
+    try {
+      const response = await fetch(`${apiUrl}/acquisition/prospects/${leadId}/outreach/prepare`, {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ offer }),
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(data?.message || "Não foi possível preparar a abordagem.");
+      await refreshCrmProspects();
+      setOutreachMessage(data?.message || "Abordagem preparada para revisão.");
+    } catch (error) {
+      setOutreachMessage(error instanceof Error ? error.message : "Falha ao preparar abordagem.");
+    } finally {
+      setOutreachBusyId(null);
+    }
+  }
+
+  async function updateOutreach(leadId: string, status: string) {
+    setOutreachBusyId(leadId);
+    setOutreachMessage("");
+    try {
+      const response = await fetch(`${apiUrl}/acquisition/prospects/${leadId}/outreach`, {
+        method: "PATCH",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status }),
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(data?.message || "Não foi possível atualizar o follow-up.");
+      await refreshCrmProspects();
+      setOutreachMessage("Pipeline atualizado.");
+    } catch (error) {
+      setOutreachMessage(error instanceof Error ? error.message : "Falha ao atualizar prospect.");
+    } finally {
+      setOutreachBusyId(null);
+    }
+  }
+
+  async function copyText(text: string | undefined, label: string) {
+    if (!text) return;
+    try {
+      await navigator.clipboard.writeText(text);
+      setOutreachMessage(`${label} copiado. Revise antes de enviar.`);
+    } catch {
+      setOutreachMessage("Não foi possível copiar automaticamente. Selecione o texto manualmente.");
+    }
+  }
+
   async function importProspect(prospect: Prospect) {
     setProspectMessage("");
     try {
@@ -129,6 +229,7 @@ export function AcquisitionManager({ initialPlans }: { initialPlans: Plan[] }) {
       if (!response.ok) throw new Error(data?.message || "Não foi possível adicionar o prospect ao CRM.");
       setImported((current) => ({ ...current, [prospect.sourceRef]: true }));
       setProspectMessage(data?.duplicate ? "Esse prospect já estava no CRM." : `${prospect.name} foi adicionado ao CRM para revisão.`);
+      await refreshCrmProspects();
     } catch (error) {
       setProspectMessage(error instanceof Error ? error.message : "Falha ao importar prospect.");
     }
@@ -233,6 +334,98 @@ export function AcquisitionManager({ initialPlans }: { initialPlans: Plan[] }) {
               ))}
             </div>
           ) : <div className="empty-state"><strong>Nenhuma busca feita</strong><p>Ex.: “oficinas mecânicas” + “Maringá, Paraná”. O resultado vem de dados públicos e precisa ser revisado antes de qualquer contato.</p></div>}
+        </article>
+      </section>
+
+      <section className="workspace-grid" style={{ marginTop: 18 }}>
+        <article className="panel form-panel">
+          <div className="panel-title">
+            <div><span className="eyebrow">ABORDAGEM ASSISTIDA</span><h3>Transformar prospect em conversa</h3></div>
+          </div>
+          <p className="feature-copy">
+            Informe a oferta uma vez. O GerenteMarketing prepara uma abordagem personalizada e um follow-up para cada prospect do CRM.
+            Nada é enviado automaticamente: você revisa antes de qualquer contato.
+          </p>
+          <label>Produto / serviço da abordagem
+            <input
+              value={outreachOffer}
+              onChange={(event) => setOutreachOffer(event.target.value)}
+              placeholder="Ex.: fornecimento de lâmpadas H4 e H7 para oficinas"
+            />
+          </label>
+          <div className="status-message" style={{ marginTop: 12 }}>
+            Prospects no CRM: <strong>{crmProspects.length}</strong> · follow-ups vencidos: <strong>{crmProspects.filter((item) => item.outreach.due).length}</strong>
+          </div>
+          {outreachMessage ? <div className="status-message" style={{ marginTop: 12 }}>{outreachMessage}</div> : null}
+        </article>
+
+        <article className="panel list-panel">
+          <div className="panel-title">
+            <div><span className="eyebrow">PIPELINE COMERCIAL</span><h3>Revisão e follow-up</h3></div>
+            <span className="status-muted">Sem disparo automático</span>
+          </div>
+          {crmProspects.length ? (
+            <div className="entity-list" style={{ maxHeight: 720, overflowY: "auto" }}>
+              {crmProspects.map((lead) => (
+                <div className="entity-row" key={lead.id} style={{ alignItems: "flex-start" }}>
+                  <div className="entity-main" style={{ width: "100%" }}>
+                    <div className="entity-title">
+                      <strong>{lead.name || "Prospect"}</strong>
+                      <span className={`status-badge ${lead.outreach.due ? "pending" : "active"}`}>
+                        SCORE {lead.score}
+                      </span>
+                    </div>
+                    <small>{lead.category || "empresa"} · {lead.stage} · {lead.outreach.status}</small>
+                    {lead.phone ? <small style={{ display: "block" }}>Telefone público: {lead.phone}</small> : null}
+                    {lead.email ? <small style={{ display: "block" }}>E-mail público: {lead.email}</small> : null}
+                    {lead.outreach.nextFollowUpAt ? (
+                      <small style={{ display: "block" }}>
+                        Follow-up: {new Date(lead.outreach.nextFollowUpAt).toLocaleString("pt-BR")}
+                        {lead.outreach.due ? " · VENCIDO" : ""}
+                      </small>
+                    ) : null}
+
+                    {lead.outreach.drafts?.whatsapp ? (
+                      <div style={{ marginTop: 10, display: "grid", gap: 8 }}>
+                        <textarea readOnly value={lead.outreach.drafts.whatsapp} style={{ minHeight: 110 }} />
+                        <div className="row-actions">
+                          <button className="ghost-button" type="button" onClick={() => copyText(lead.outreach.drafts.whatsapp, "Mensagem")}>Copiar mensagem</button>
+                          {lead.email && lead.outreach.drafts.emailBody ? (
+                            <button className="ghost-button" type="button" onClick={() => copyText(`${lead.outreach.drafts.emailSubject || ""}\n\n${lead.outreach.drafts.emailBody || ""}`, "E-mail")}>Copiar e-mail</button>
+                          ) : null}
+                        </div>
+                      </div>
+                    ) : null}
+
+                    <div className="row-actions" style={{ marginTop: 10 }}>
+                      <button
+                        className="primary-button"
+                        type="button"
+                        disabled={outreachBusyId === lead.id}
+                        onClick={() => prepareOutreach(lead.id)}
+                      >
+                        {lead.outreach.drafts?.whatsapp ? "Refazer abordagem" : "Preparar abordagem"}
+                      </button>
+                      {lead.outreach.drafts?.whatsapp ? (
+                        <>
+                          <button className="ghost-button" type="button" onClick={() => updateOutreach(lead.id, "CONTACTED")} disabled={outreachBusyId === lead.id}>Contato feito</button>
+                          <button className="ghost-button" type="button" onClick={() => updateOutreach(lead.id, "REPLIED")} disabled={outreachBusyId === lead.id}>Respondeu</button>
+                          <button className="ghost-button" type="button" onClick={() => updateOutreach(lead.id, "FOLLOW_UP_DUE")} disabled={outreachBusyId === lead.id}>Follow-up agora</button>
+                          <button className="primary-button" type="button" onClick={() => updateOutreach(lead.id, "WON")} disabled={outreachBusyId === lead.id}>Virou cliente</button>
+                          <button className="danger-button" type="button" onClick={() => updateOutreach(lead.id, "NOT_INTERESTED")} disabled={outreachBusyId === lead.id}>Sem interesse</button>
+                        </>
+                      ) : null}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="empty-state">
+              <strong>Nenhum prospect no CRM</strong>
+              <p>Use o Radar de Prospects acima, revise os resultados e adicione as oportunidades que fazem sentido.</p>
+            </div>
+          )}
         </article>
       </section>
     </>
