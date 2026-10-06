@@ -7,12 +7,13 @@ import {
   ContentStatus,
   ContentType,
   LeadSource,
+  LeadStage,
   Prisma,
   RecommendationStatus,
   RecommendationType,
 } from "@prisma/client";
 import { PrismaService } from "../prisma.service";
-import { CreateAcquisitionPlanDto, ImportAcquisitionProspectDto } from "./acquisition.dto";
+import { CreateAcquisitionPlanDto, ImportAcquisitionProspectDto, PrepareAcquisitionOutreachDto, UpdateAcquisitionOutreachDto } from "./acquisition.dto";
 
 type NominatimPlace = {
   place_id?: number;
