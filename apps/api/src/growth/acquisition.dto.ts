@@ -1,5 +1,5 @@
 import { Type } from "class-transformer";
-import { IsBoolean, IsEmail, IsEnum, IsInt, IsOptional, IsString, Max, MaxLength, Min, MinLength } from "class-validator";
+import { IsBoolean, IsEmail, IsEnum, IsIn, IsInt, IsOptional, IsString, Max, MaxLength, Min, MinLength } from "class-validator";
 import { CampaignObjective } from "@prisma/client";
 
 export class CreateAcquisitionPlanDto {
@@ -80,4 +80,30 @@ export class ImportAcquisitionProspectDto {
   @IsString()
   @MaxLength(120)
   category?: string;
+}
+
+
+export class PrepareAcquisitionOutreachDto {
+  @IsString()
+  @MinLength(3)
+  @MaxLength(180)
+  offer!: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(300)
+  note?: string;
+}
+
+export class UpdateAcquisitionOutreachDto {
+  @IsString()
+  @IsIn(["CONTACTED", "REPLIED", "FOLLOW_UP_DUE", "WON", "NOT_INTERESTED"])
+  status!: "CONTACTED" | "REPLIED" | "FOLLOW_UP_DUE" | "WON" | "NOT_INTERESTED";
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  @Max(30)
+  followUpDays?: number;
 }
