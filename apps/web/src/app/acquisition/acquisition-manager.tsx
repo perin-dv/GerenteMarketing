@@ -49,6 +49,9 @@ type CrmProspect = {
   address: string | null;
   publicSource: string | null;
   score: number;
+  priority: "HOT" | "WARM" | "REVIEW" | "DONE";
+  priorityReason: string;
+  priorityWeight: number;
   outreach: {
     status: string;
     offer: string | null;
@@ -84,6 +87,12 @@ export function AcquisitionManager({
   const [outreachOffer, setOutreachOffer] = useState("");
   const [outreachBusyId, setOutreachBusyId] = useState<string | null>(null);
   const [outreachMessage, setOutreachMessage] = useState("");
+
+  const actionableProspects = crmProspects.filter((item) => item.priority !== "DONE");
+  const hotProspects = actionableProspects.filter((item) => item.priority === "HOT");
+  const warmProspects = actionableProspects.filter((item) => item.priority === "WARM");
+  const dueProspects = actionableProspects.filter((item) => item.outreach.due);
+  const dailyQueue = [...hotProspects, ...warmProspects.filter((item) => !hotProspects.some((hot) => hot.id === item.id))].slice(0, 6);
 
   async function createPlan(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -246,6 +255,48 @@ export function AcquisitionManager({
         <strong>CLIENTE &gt; VAIDADE</strong>
       </section>
 
+      <section className="summary-strip">
+        <div><span>Ações hoje</span><strong>{hotProspects.length}</strong></div>
+        <div><span>Follow-ups vencidos</span><strong>{dueProspects.length}</strong></div>
+        <div><span>Oportunidades mornas</span><strong>{warmProspects.length}</strong></div>
+      </section>
+
+      <section className="panel" style={{ marginBottom: 18 }}>
+        <div className="panel-title">
+          <div><span className="eyebrow">CENTRAL DO DIA</span><h3>Quem merece sua atenção agora</h3></div>
+          <span className="status-muted">Prioridade por follow-up + resposta + qualidade do contato</span>
+        </div>
+        {dailyQueue.length ? (
+          <div className="entity-list" style={{ maxHeight: 360, overflowY: "auto" }}>
+            {dailyQueue.map((lead) => (
+              <div className="entity-row" key={`daily-${lead.id}`}>
+                <div className="entity-main">
+                  <div className="entity-title">
+                    <strong>{lead.name || "Prospect"}</strong>
+                    <span className={`status-badge ${lead.priority === "HOT" ? "pending" : "active"}`}>
+                      {lead.priority === "HOT" ? "PRIORIDADE" : "AQUECENDO"} · {lead.score}
+                    </span>
+                  </div>
+                  <small>{lead.priorityReason}</small>
+                  {lead.outreach.nextFollowUpAt ? <small style={{ display: "block" }}>Próxima ação: {new Date(lead.outreach.nextFollowUpAt).toLocaleString("pt-BR")}</small> : null}
+                </div>
+                <div className="row-actions">
+                  {!lead.outreach.drafts?.whatsapp ? (
+                    <button className="primary-button" type="button" onClick={() => prepareOutreach(lead.id)} disabled={outreachBusyId === lead.id}>Preparar abordagem</button>
+                  ) : lead.outreach.due ? (
+                    <button className="primary-button" type="button" onClick={() => copyText(lead.outreach.drafts.followUp, "Follow-up")}>Copiar follow-up</button>
+                  ) : (
+                    <button className="ghost-button" type="button" onClick={() => copyText(lead.outreach.drafts.whatsapp, "Mensagem")}>Copiar abordagem</button>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="empty-state"><strong>Nenhuma ação comercial urgente</strong><p>Adicione prospects ao CRM ou marque contatos/respostas para o gerente organizar a próxima ação.</p></div>
+        )}
+      </section>
+
       <section className="workspace-grid">
         <article className="panel form-panel">
           <div className="panel-title">
@@ -371,11 +422,12 @@ export function AcquisitionManager({
                   <div className="entity-main" style={{ width: "100%" }}>
                     <div className="entity-title">
                       <strong>{lead.name || "Prospect"}</strong>
-                      <span className={`status-badge ${lead.outreach.due ? "pending" : "active"}`}>
-                        SCORE {lead.score}
+                      <span className={`status-badge ${lead.priority === "HOT" ? "pending" : "active"}`}>
+                        {lead.priority} · SCORE {lead.score}
                       </span>
                     </div>
                     <small>{lead.category || "empresa"} · {lead.stage} · {lead.outreach.status}</small>
+                    <small style={{ display: "block" }}>{lead.priorityReason}</small>
                     {lead.phone ? <small style={{ display: "block" }}>Telefone público: {lead.phone}</small> : null}
                     {lead.email ? <small style={{ display: "block" }}>E-mail público: {lead.email}</small> : null}
                     {lead.outreach.nextFollowUpAt ? (
