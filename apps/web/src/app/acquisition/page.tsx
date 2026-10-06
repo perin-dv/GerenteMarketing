@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { AppFrame } from "../_components/app-frame";
-import { getProtectedJson } from "../_lib/server-data";
+import { getProtectedMany } from "../_lib/server-data";
 import { AcquisitionManager } from "./acquisition-manager";
 
 type Plan = {
@@ -25,8 +25,9 @@ type Plan = {
 };
 
 export default async function AcquisitionPage() {
-  const { me, data } = await getProtectedJson<Plan[]>("/acquisition/plans");
+  const { me, data } = await getProtectedMany(["/acquisition/plans", "/acquisition/prospects/crm"]);
   if (!me) redirect("/login");
+  const [plans, crmProspects] = data as [Plan[] | null, any[] | null];
 
   return (
     <AppFrame me={me} active="Aquisição" eyebrow="AQUISIÇÃO" title="Buscar clientes">
@@ -36,7 +37,7 @@ export default async function AcquisitionPage() {
           <p>Crie uma missão de aquisição mesmo começando do zero. O GerenteMarketing monta os temas, hooks, CTA, frequência e canais para transformar conteúdo em conversa, lead e venda.</p>
         </div>
       </div>
-      <AcquisitionManager initialPlans={data || []} />
+      <AcquisitionManager initialPlans={plans || []} initialCrmProspects={crmProspects || []} />
     </AppFrame>
   );
 }
